@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Search Results</title>
+	</head>
+	<body>
+		<h1>Search Results</h1>
+		<form action="search" method="get">
+			<input type="text" value="{{ query }}" name="query" />
+			<input type="submit" />
+		</form>
+		<ul>
+		{% for result in results %}
+			<li style="display: flex;">
+				<img src="{{ result.image }}" height="200" />
+				<div>
+					<a href="/listing/{{ result.id }}">
+						<h2>{{ result.title }}</h2>
+					</a>
+					<pre>{{ result.description }}</pre>
+				</div>
+			</li>
+		{% endfor %}
+		</ul>
+	</body>
+</html>
