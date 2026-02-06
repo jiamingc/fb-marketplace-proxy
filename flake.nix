@@ -50,7 +50,7 @@
           );
         in
         pkgs.mkShell {
-          name = "python-project";
+          # name = "python-project";
           packages = with pkgs; [
             (pythonSetEditable.mkVirtualEnv "python-project" workspace.deps.all)
             uv

@@ -1,7 +1,7 @@
 from flask import Flask, request, render_template, redirect, url_for
 
 
-from api import fetch_listing_details, search_listings
+from .api import fetch_listing_details, search_listings
 
 
 app = Flask(__name__)
