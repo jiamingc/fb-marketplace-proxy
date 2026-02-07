@@ -5,6 +5,7 @@ from .api import fetch_listing_details, search_listings
 
 
 app = Flask(__name__)
+application = app
 
 
 @app.route("/")

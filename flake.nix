@@ -20,6 +20,7 @@
 
   outputs =
     {
+      self,
       nixpkgs,
       pyproject-nix,
       uv2nix,
@@ -50,9 +51,8 @@
           );
         in
         pkgs.mkShell {
-          # name = "python-project";
           packages = with pkgs; [
-            (pythonSetEditable.mkVirtualEnv "python-project" workspace.deps.all)
+            (pythonSetEditable.mkVirtualEnv "venv" workspace.deps.all)
             uv
             just
           ];
@@ -66,6 +66,36 @@
             export REPO_ROOT=$(jj root)
           '';
         };
-      packages.x86_64-linux.default = pythonSet.mkVirtualEnv "python-project" workspace.deps.default;
+      packages.x86_64-linux.default = pythonSet.mkVirtualEnv "venv" workspace.deps.default;
+      nixosModules.default =
+        {
+          config,
+          lib,
+          ...
+        }:
+        let
+          cfg = config.services.fb-marketplace-proxy;
+        in
+        {
+          options.services.fb-marketplace-proxy = {
+            enable = lib.mkEnableOption "Enable FB Marketplace Proxy webserver";
+          };
+
+          config = lib.mkMerge [
+            (lib.mkIf cfg.enable {
+              systemd.services.fb-marketplace-proxy = {
+                after = [
+                  "network-online.target"
+                ];
+                wantedBy = [ "multi-user.target" ];
+                serviceConfig = {
+                  Type = "notify";
+                  RuntimeDirectory = "/run/fb-marketplace-proxy";
+                  ExecStart = "${lib.getExe' self.packages.x86_64-linux.default "gunicorn"} --bind unix:/run/fb-marketplace-proxy/gunicorn.sock";
+                };
+              };
+            })
+          ];
+        };
     };
 }
