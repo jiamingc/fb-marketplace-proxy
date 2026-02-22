@@ -49,7 +49,7 @@
                     wantedBy = [ "multi-user.target" ];
                     serviceConfig = {
                       Type = "notify";
-                      RuntimeDirectory = "/run/fb-marketplace-proxy";
+                      RuntimeDirectory = "fb-marketplace-proxy";
                       ExecStart = "${lib.getExe' (getSystem pkgs.system).packages.default "gunicorn"} fb_marketplace_proxy --bind unix:/run/fb-marketplace-proxy/gunicorn.sock";
                     };
                   };
