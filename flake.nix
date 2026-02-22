@@ -50,7 +50,7 @@
                     serviceConfig = {
                       Type = "notify";
                       RuntimeDirectory = "fb-marketplace-proxy";
-                      ExecStart = "${lib.getExe' (getSystem pkgs.system).packages.default "gunicorn"} fb_marketplace_proxy --bind unix:/run/fb-marketplace-proxy/gunicorn.sock";
+                      ExecStart = "${lib.getExe' (getSystem pkgs.stdenv.hostPlatform.system).packages.default "gunicorn"} fb_marketplace_proxy --bind unix:/run/fb-marketplace-proxy/gunicorn.sock";
                     };
                   };
                 }
