@@ -43,9 +43,8 @@
               config = (
                 lib.mkIf cfg.enable {
                   systemd.services.fb-marketplace-proxy = {
-                    after = [
-                      "network-online.target"
-                    ];
+                    after = [ "network-online.target" ];
+                    wants = [ "network-online.target" ];
                     wantedBy = [ "multi-user.target" ];
                     serviceConfig = {
                       Type = "notify";
