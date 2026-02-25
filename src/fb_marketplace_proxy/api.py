@@ -5,6 +5,10 @@ from typing import Any
 import requests
 
 
+class UserViewableError(Exception):
+    pass
+
+
 def graphql_query(doc_id: int, variables: dict[str, object]) -> dict[str, Any]:
     response = requests.post(
         "https://www.facebook.com/api/graphql/",
@@ -17,11 +21,11 @@ def graphql_query(doc_id: int, variables: dict[str, object]) -> dict[str, Any]:
     response_json = response.json()
     if "data" not in response_json:
         if "errors" in response_json:
-            raise Exception(
+            raise UserViewableError(
                 ", ".join(error.get("message", "") for error in response_json["errors"])
             )
         else:
-            raise Exception("No data in GraphQL response")
+            raise UserViewableError("No data in GraphQL response")
 
     return response_json["data"]
 

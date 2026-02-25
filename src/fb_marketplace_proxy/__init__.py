@@ -1,16 +1,15 @@
 from flask import Flask, request, render_template, redirect, url_for
 
 
-from .api import fetch_listing_details, search_listings
+from .api import fetch_listing_details, search_listings, UserViewableError
 
 
 app = Flask(__name__)
 application = app
 
 
-# TODO make an explicit exception type for this
-@app.errorhandler(Exception)
-def handle_exception(e: Exception):
+@app.errorhandler(UserViewableError)
+def handle_exception(e: UserViewableError):
     return render_template("error.html.jinja", message=str(e)), 500
 
 
