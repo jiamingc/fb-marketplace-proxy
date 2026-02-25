@@ -1,54 +1,70 @@
-import requests
-
 import json
 from datetime import datetime
-from pprint import pp
-from textwrap import dedent
+from typing import Any
+
+import requests
+
+
+def graphql_query(doc_id: int, variables: dict[str, object]) -> dict[str, Any]:
+    response = requests.post(
+        "https://www.facebook.com/api/graphql/",
+        data={
+            "doc_id": doc_id,
+            "variables": json.dumps(variables),
+        },
+    )
+
+    response_json = response.json()
+    if "data" not in response_json:
+        if "error" in response_json:
+            raise Exception(
+                ", ".join(error.get("message", "") for error in response_json["error"])
+            )
+        else:
+            raise Exception("No data in GraphQL response")
+
+    return response_json["data"]
 
 
 def search_listings(query: str):
     # Seems like I need to mask my request to get more than 20 results
-    r = requests.post(
-        "https://www.facebook.com/api/graphql/",
-        data={
-            "doc_id": 25565941223068174,
-            "variables": json.dumps(
-                {
-                    "count": 24,
-                    # "cursor": '',
-                    "params": {
-                        "bqf": {
-                            "callsite": "COMMERCE_MKTPLACE_WWW",
-                            "query": query,
-                        },
-                        "browse_request_params": {
-                            "commerce_enable_local_pickup": True,
-                            "commerce_enable_shipping": True,
-                            "commerce_search_and_rp_available": True,
-                            # "commerce_search_and_rp_category_id": [],
-                            # "commerce_search_and_rp_condition": None,
-                            # "commerce_search_and_rp_ctime_days": None,
-                            # exclude to use my location
-                            # "filter_location_latitude": 37.7793,
-                            # "filter_location_longitude": -122.419,
-                            # "filter_radius_km": 65,
-                            # "filter_price_lower_bound": 0,
-                            # "filter_price_upper_bound": 214748364700,
-                        },
-                        "custom_request_params": {
-                            "surface": "SEARCH",
-                        },
-                    },
-                }
-            ),
+    data = graphql_query(
+        25565941223068174,
+        {
+            "count": 24,
+            # "cursor": '',
+            "params": {
+                "bqf": {
+                    "callsite": "COMMERCE_MKTPLACE_WWW",
+                    "query": query,
+                },
+                "browse_request_params": {
+                    "commerce_enable_local_pickup": True,
+                    "commerce_enable_shipping": True,
+                    "commerce_search_and_rp_available": True,
+                    # "commerce_search_and_rp_category_id": [],
+                    # "commerce_search_and_rp_condition": None,
+                    # "commerce_search_and_rp_ctime_days": None,
+                    # exclude to use my location
+                    # "filter_location_latitude": 37.7793,
+                    # "filter_location_longitude": -122.419,
+                    # "filter_radius_km": 65,
+                    # "filter_price_lower_bound": 0,
+                    # "filter_price_upper_bound": 214748364700,
+                },
+                "custom_request_params": {
+                    "surface": "SEARCH",
+                },
+            },
         },
     )
-    response = r.json()
+
     # has next page, cursor
-    # cursor = response["data"]["marketplace_search"]["feed_units"]["page_info"][
+    # cursor = data["marketplace_search"]["feed_units"]["page_info"][
     #     "end_cursor"
     # ]
-    listing_edges = response["data"]["marketplace_search"]["feed_units"]["edges"]
+
+    listing_edges = data["marketplace_search"]["feed_units"]["edges"]
     listings = [edge["node"]["listing"] for edge in listing_edges]
 
     result = [
@@ -64,42 +80,29 @@ def search_listings(query: str):
 
 
 def fetch_images(listing_id: int) -> list[str]:
-    r = requests.post(
-        "https://www.facebook.com/api/graphql/",
-        data={
-            "variables": json.dumps(
-                {
-                    "targetId": listing_id,
-                }
-            ),
-            "doc_id": 10059604367394414,
+    data = graphql_query(
+        10059604367394414,
+        {
+            "targetId": listing_id,
         },
     )
 
-    response = r.json()
-
-    listing_photos = response["data"]["viewer"]["marketplace_product_details_page"][
-        "target"
-    ]["listing_photos"]
+    listing_photos = data["viewer"]["marketplace_product_details_page"]["target"][
+        "listing_photos"
+    ]
 
     image_urls = [photo["image"]["uri"] for photo in listing_photos]
     return image_urls
 
 
 def fetch_listing_details(listing_id: int):
-    r = requests.post(
-        "https://www.facebook.com/api/graphql/",
-        data={
-            "variables": json.dumps(
-                {
-                    "targetId": listing_id,
-                }
-            ),
-            "doc_id": 25771029242527736,
+    data = graphql_query(
+        25771029242527736,
+        {
+            "targetId": listing_id,
         },
     )
-    response = r.json()
-    item = response["data"]["viewer"]["marketplace_product_details_page"]["target"]
+    item = data["viewer"]["marketplace_product_details_page"]["target"]
 
     status = (
         "Sold"

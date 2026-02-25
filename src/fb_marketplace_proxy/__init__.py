@@ -8,6 +8,12 @@ app = Flask(__name__)
 application = app
 
 
+# TODO make an explicit exception type for this
+@app.errorhandler(Exception)
+def handle_exception(e: Exception):
+    return render_template("error.html.jinja", message=str(e)), 500
+
+
 @app.route("/")
 def index():
     return render_template("search_form.html.jinja")
