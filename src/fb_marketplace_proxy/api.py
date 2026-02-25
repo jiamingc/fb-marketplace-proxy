@@ -18,7 +18,7 @@ def graphql_query(doc_id: int, variables: dict[str, object]) -> dict[str, Any]:
     if "data" not in response_json:
         if "errors" in response_json:
             raise Exception(
-                ", ".join(error.get("message", "") for error in response_json["error"])
+                ", ".join(error.get("message", "") for error in response_json["errors"])
             )
         else:
             raise Exception("No data in GraphQL response")
