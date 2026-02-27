@@ -9,12 +9,24 @@ class UserViewableError(Exception):
     pass
 
 
-def graphql_query(doc_id: int, variables: dict[str, object]) -> dict[str, Any]:
+def graphql_query(
+    doc_id: int,
+    variables: dict[str, object],
+) -> dict[str, Any]:
     response = requests.post(
         "https://www.facebook.com/api/graphql/",
         data={
             "doc_id": doc_id,
             "variables": json.dumps(variables),
+            # "fb_dtsg": "TODO",
+        },
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+            "Sec-Fetch-Site": "same-origin",
+        },
+        cookies={
+            # "c_user": "TODO",
+            # "xs": "TODO",
         },
     )
 
@@ -31,17 +43,13 @@ def graphql_query(doc_id: int, variables: dict[str, object]) -> dict[str, Any]:
 
 
 def search_listings(query: str):
-    # Seems like I need to mask my request to get more than 20 results
     data = graphql_query(
-        25565941223068174,
+        25360896583559734,
         {
             "count": 24,
-            # "cursor": '',
+            # "cursor": None,
             "params": {
-                "bqf": {
-                    "callsite": "COMMERCE_MKTPLACE_WWW",
-                    "query": query,
-                },
+                "bqf": {"callsite": "COMMERCE_MKTPLACE_WWW", "query": "hat"},
                 "browse_request_params": {
                     "commerce_enable_local_pickup": True,
                     "commerce_enable_shipping": True,
@@ -49,12 +57,11 @@ def search_listings(query: str):
                     # "commerce_search_and_rp_category_id": [],
                     # "commerce_search_and_rp_condition": None,
                     # "commerce_search_and_rp_ctime_days": None,
-                    # exclude to use my location
-                    # "filter_location_latitude": 37.7793,
-                    # "filter_location_longitude": -122.419,
-                    # "filter_radius_km": 65,
+                    # "filter_location_latitude": 37.394714355469,
+                    # "filter_location_longitude": -122.07458496094,
                     # "filter_price_lower_bound": 0,
                     # "filter_price_upper_bound": 214748364700,
+                    # "filter_radius_km": 65,
                 },
                 "custom_request_params": {
                     "surface": "SEARCH",
@@ -71,16 +78,43 @@ def search_listings(query: str):
     listing_edges = data["marketplace_search"]["feed_units"]["edges"]
     listings = [edge["node"]["listing"] for edge in listing_edges]
 
-    result = [
-        {
-            "title": listing["marketplace_listing_title"],
-            "image": listing["primary_listing_photo"]["image"]["uri"],
-            "description": f"Price: {listing['listing_price']['formatted_amount']}\nLocation: {listing['location']['reverse_geocode']['city_page']['display_name']}",
-            "id": listing["id"],
-        }
-        for listing in listings
-    ]
+    result = [_extract_listing_info(listing) for listing in listings]
     return result
+
+
+def _extract_listing_info(listing: dict[str, Any]):
+    try:
+        try:
+            price = listing["listing_price"]["formatted_amount"]
+        except KeyError, TypeError:
+            price = "?"
+
+        try:
+            location = listing["location"]["reverse_geocode"]["city_page"][
+                "display_name"
+            ]
+        except KeyError, TypeError:
+            location = "?"
+
+        try:
+            image = listing["primary_listing_photo"]["image"]["uri"]
+        except KeyError, TypeError:
+            image = ""
+
+        return {
+            "title": listing.get("marketplace_listing_title", ""),
+            "image": image,
+            "description": f"Price: {price}\nLocation: {location}",
+            "id": listing.get("id", ""),
+        }
+    except AssertionError as e:
+        listing_id = listing.get("id")
+        return {
+            "title": f"Error: {listing_id}",
+            "image": "",
+            "description": str(e),
+            "id": listing_id,
+        }
 
 
 def fetch_images(listing_id: int) -> list[str]:
