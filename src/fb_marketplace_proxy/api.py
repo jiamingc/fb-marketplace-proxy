@@ -72,15 +72,31 @@ def search_listings(query: str, cursor: str | None = None):
         },
     )
 
-    cursor = data["marketplace_search"]["feed_units"]["page_info"]["end_cursor"]
+    listing_edges = data["marketplace_search"]["feed_units"]["edges"]
+    for idx, edge in enumerate(listing_edges):
+        node_type = edge["node"]["__typename"]
+        if node_type == "MarketplaceFeedListingStoryObject":
+            continue
 
-    listing_edges = takewhile(
-        lambda edge: edge["node"]["__typename"] == "MarketplaceFeedListingStoryObject",
-        data["marketplace_search"]["feed_units"]["edges"],
-    )
+        assert node_type in [
+            "MarketplaceSearchFeedHeader",
+            "MarketplaceSearchFeedNoResults",
+        ], f"unexpected node type: {node_type}"
+
+        # We found a feed header, which marks the end of the regular search results
+        listing_edges = listing_edges[:idx]
+        cursor = None
+        break
+    else:
+        if len(listing_edges) == 24:
+            cursor = data["marketplace_search"]["feed_units"]["page_info"]["end_cursor"]
+        else:
+            # Sometimes a cursor for irrelevant results is given after the end of relevant results
+            cursor = None
+
     listings = [edge["node"]["listing"] for edge in listing_edges]
-
     parsed_listings = [_extract_listing_info(listing) for listing in listings]
+
     return parsed_listings, cursor
 
 

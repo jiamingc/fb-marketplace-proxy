@@ -9,19 +9,25 @@
 			<input type="text" value="{{ query }}" name="query" />
 			<input type="submit" />
 		</form>
-		<ul>
-		{% for result in results %}
-			<li style="display: flex;">
-				<img src="{{ result.image }}" height="200" />
-				<div>
-					<a href="/listing/{{ result.id }}">
-						<h2>{{ result.title }}</h2>
-					</a>
-					<pre>{{ result.description }}</pre>
-				</div>
-			</li>
-		{% endfor %}
-		</ul>
-		<a href="{{ url_for("search", query=query, cursor=end_cursor) }}">Next Page</a>
+		{% if results %}
+			<ul>
+			{% for result in results %}
+				<li style="display: flex;">
+					<img src="{{ result.image }}" height="200" />
+					<div>
+						<a href="/listing/{{ result.id }}">
+							<h2>{{ result.title }}</h2>
+						</a>
+						<pre>{{ result.description }}</pre>
+					</div>
+				</li>
+			{% endfor %}
+			</ul>
+		{% else %}
+			<p>No results</p>
+		{% endif %}
+		{% if end_cursor is not none %}
+			<a href="{{ url_for("search", query=query, cursor=end_cursor) }}">Next Page</a>
+		{% endif %}
 	</body>
 </html>
