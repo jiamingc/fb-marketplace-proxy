@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from itertools import takewhile
 from typing import Any
 
 import requests
@@ -42,17 +43,17 @@ def graphql_query(
     return response_json["data"]
 
 
-def search_listings(query: str):
+def search_listings(query: str, cursor: str | None = None):
     data = graphql_query(
         25360896583559734,
         {
             "count": 24,
-            # "cursor": None,
+            "cursor": cursor,
             "params": {
-                "bqf": {"callsite": "COMMERCE_MKTPLACE_WWW", "query": "hat"},
+                "bqf": {"callsite": "COMMERCE_MKTPLACE_WWW", "query": query},
                 "browse_request_params": {
                     "commerce_enable_local_pickup": True,
-                    "commerce_enable_shipping": True,
+                    "commerce_enable_shipping": False,
                     "commerce_search_and_rp_available": True,
                     # "commerce_search_and_rp_category_id": [],
                     # "commerce_search_and_rp_condition": None,
@@ -62,6 +63,7 @@ def search_listings(query: str):
                     # "filter_price_lower_bound": 0,
                     # "filter_price_upper_bound": 214748364700,
                     # "filter_radius_km": 65,
+                    "filter_radius_km": 10,
                 },
                 "custom_request_params": {
                     "surface": "SEARCH",
@@ -70,16 +72,16 @@ def search_listings(query: str):
         },
     )
 
-    # has next page, cursor
-    # cursor = data["marketplace_search"]["feed_units"]["page_info"][
-    #     "end_cursor"
-    # ]
+    cursor = data["marketplace_search"]["feed_units"]["page_info"]["end_cursor"]
 
-    listing_edges = data["marketplace_search"]["feed_units"]["edges"]
+    listing_edges = takewhile(
+        lambda edge: edge["node"]["__typename"] == "MarketplaceFeedListingStoryObject",
+        data["marketplace_search"]["feed_units"]["edges"],
+    )
     listings = [edge["node"]["listing"] for edge in listing_edges]
 
-    result = [_extract_listing_info(listing) for listing in listings]
-    return result
+    parsed_listings = [_extract_listing_info(listing) for listing in listings]
+    return parsed_listings, cursor
 
 
 def _extract_listing_info(listing: dict[str, Any]):

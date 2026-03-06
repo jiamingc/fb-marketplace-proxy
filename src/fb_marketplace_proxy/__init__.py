@@ -19,14 +19,18 @@ def index():
 
 
 @app.route("/search")
-def search_results():
+def search():
     try:
         query = request.args["query"]
     except KeyError:
         return redirect(url_for("index"))
 
-    results = search_listings(query)
-    return render_template("search_results.html.jinja", query=query, results=results)
+    cursor = request.args.get("cursor")
+
+    results, end_cursor = search_listings(query, cursor)
+    return render_template(
+        "search_results.html.jinja", query=query, results=results, end_cursor=end_cursor
+    )
 
 
 @app.route("/listing/<int:listing_id>")

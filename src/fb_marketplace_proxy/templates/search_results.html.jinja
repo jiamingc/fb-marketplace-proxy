@@ -22,5 +22,6 @@
 			</li>
 		{% endfor %}
 		</ul>
+		<a href="{{ url_for("search", query=query, cursor=end_cursor) }}">Next Page</a>
 	</body>
 </html>
