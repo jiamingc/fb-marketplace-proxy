@@ -1,6 +1,7 @@
 import json
 from typing import Any
 from typing import NamedTuple
+import re
 
 import requests
 
@@ -15,8 +16,35 @@ class FacebookApiError(Exception):
 
 
 class FacebookClient:
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+
     def __init__(self, auth_cookies: FacebookAuthCookies | None = None):
         self.auth_cookies: FacebookAuthCookies | None = auth_cookies
+        self.dtsg: str | None = auth_cookies and self._get_dtsg(auth_cookies)
+
+    @classmethod
+    def _get_dtsg(cls, auth_cookies: FacebookAuthCookies) -> str:
+        response = requests.get(
+            "https://www.facebook.com/bookmarks",
+            cookies={
+                "c_user": str(auth_cookies.c_user),
+                "xs": auth_cookies.xs,
+            },
+            headers={
+                "User-Agent": cls.USER_AGENT,
+                "Sec-Fetch-Mode": "navigate",
+            },
+        )
+
+        match = re.search(
+            'DTSGInitialData",\\[\\],\\{"token":"(?P<token>[^"]+)"',
+            #'DTSGInitialData",\\[\\],',
+            response.text,
+        )
+
+        assert match is not None
+
+        return match["token"]
 
     def _graphql_query(
         self,
@@ -28,10 +56,10 @@ class FacebookClient:
             data={
                 "doc_id": doc_id,
                 "variables": json.dumps(variables),
-                # "fb_dtsg": "TODO",
+                "fb_dtsg": self.dtsg,
             },
             headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+                "User-Agent": self.USER_AGENT,
                 "Sec-Fetch-Site": "same-origin",
             },
             cookies={
