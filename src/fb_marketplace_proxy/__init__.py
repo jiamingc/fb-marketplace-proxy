@@ -1,15 +1,18 @@
 from flask import Flask, request, render_template, redirect, url_for
 
 
-from .api import fetch_listing_details, search_listings, UserViewableError
+from .scraper import Scraper
+from .facebook import FacebookClient, FacebookApiError
 
+facebook_client = FacebookClient()
+scraper = Scraper(facebook_client)
 
 app = Flask(__name__)
 application = app
 
 
-@app.errorhandler(UserViewableError)
-def handle_exception(e: UserViewableError):
+@app.errorhandler(FacebookApiError)
+def handle_exception(e: FacebookApiError):
     return render_template("error.html.jinja", message=str(e)), 500
 
 
@@ -27,7 +30,7 @@ def search():
 
     cursor = request.args.get("cursor")
 
-    results, end_cursor = search_listings(query, cursor)
+    results, end_cursor = scraper.search_listings(query, cursor)
     return render_template(
         "search_results.html.jinja", query=query, results=results, end_cursor=end_cursor
     )
@@ -35,5 +38,5 @@ def search():
 
 @app.route("/listing/<int:listing_id>")
 def listing_details(listing_id: int):
-    details = fetch_listing_details(listing_id)
+    details = scraper.fetch_listing_details(listing_id)
     return render_template("listing_details.html.jinja", **details)
