@@ -6,7 +6,7 @@ import requests
 
 
 class FacebookAuthCookies(NamedTuple):
-    c_user: str
+    c_user: int
     xs: str
 
 
@@ -35,7 +35,7 @@ class FacebookClient:
                 "Sec-Fetch-Site": "same-origin",
             },
             cookies={
-                "c_user": self.auth_cookies.c_user,
+                "c_user": str(self.auth_cookies.c_user),
                 "xs": self.auth_cookies.xs,
             }
             if self.auth_cookies is not None
@@ -99,5 +99,17 @@ class FacebookClient:
             26002077532790480,
             {
                 "targetId": listing_id,
+            },
+        )
+
+    def CometSettingsDropdownTriggerQuery(self):
+        return self._graphql_query(
+            24059733830298575,
+            {
+                "pageManagementNuxId": 0,
+                "profileSwitcherNuxId": 0,
+                "coreAppAdminProfileSwitcherNuxId": 0,
+                "profileSwitcherAdminEducationNuxId": 0,
+                "showNewToast": False,
             },
         )
