@@ -5,7 +5,7 @@ from .scraper import Scraper
 from .facebook import FacebookClient, FacebookApiError
 
 facebook_client = FacebookClient()
-scraper = Scraper(facebook_client)
+scr = Scraper(facebook_client)
 
 app = Flask(__name__)
 application = app
@@ -30,7 +30,7 @@ def search():
 
     cursor = request.args.get("cursor")
 
-    results, end_cursor = scraper.search_listings(query, cursor)
+    results, end_cursor = scr.search_listings(query, cursor)
     return render_template(
         "search_results.html.jinja", query=query, results=results, end_cursor=end_cursor
     )
@@ -38,5 +38,5 @@ def search():
 
 @app.route("/listing/<int:listing_id>")
 def listing_details(listing_id: int):
-    details = scraper.fetch_listing_details(listing_id)
+    details = scr.fetch_listing_details(listing_id)
     return render_template("listing_details.html.jinja", **details)
