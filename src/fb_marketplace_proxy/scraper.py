@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any
-from .facebook import FacebookClient
+from .facebook import FacebookClient, FacebookApiError
 from typing import NamedTuple, TypedDict
 
 
@@ -140,3 +140,11 @@ class Scraper:
             description=description,
             images=self.fetch_images(listing_id),
         )
+
+    def get_user_name(self) -> str | None:
+        try:
+            data = self.facebook_client.CometSettingsDropdownTriggerQuery()
+        except FacebookApiError:
+            return None
+        else:
+            return data["viewer"]["actor"]["name"]

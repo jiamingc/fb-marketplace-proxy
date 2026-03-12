@@ -1,4 +1,5 @@
 import json
+from functools import cache
 from typing import Any
 from typing import NamedTuple
 import re
@@ -23,7 +24,9 @@ class FacebookClient:
         self.dtsg: str | None = auth_cookies and self._get_dtsg(auth_cookies)
 
     @classmethod
+    @cache
     def _get_dtsg(cls, auth_cookies: FacebookAuthCookies) -> str:
+        print("fetching dtsg")
         response = requests.get(
             "https://www.facebook.com/bookmarks",
             cookies={
@@ -34,17 +37,18 @@ class FacebookClient:
                 "User-Agent": cls.USER_AGENT,
                 "Sec-Fetch-Mode": "navigate",
             },
+            stream=True,
         )
 
-        match = re.search(
-            'DTSGInitialData",\\[\\],\\{"token":"(?P<token>[^"]+)"',
-            #'DTSGInitialData",\\[\\],',
-            response.text,
-        )
+        for line in response.iter_lines():
+            match = re.search(
+                b'DTSGInitialData",\\[\\],\\{"token":"(?P<token>[^"]+)"',
+                line,
+            )
+            if match is not None:
+                return match["token"].decode()
 
-        assert match is not None
-
-        return match["token"]
+        assert False
 
     def _graphql_query(
         self,
