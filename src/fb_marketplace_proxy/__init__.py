@@ -1,3 +1,5 @@
+import re
+
 from flask import Flask, request, render_template, redirect, url_for, session
 
 
@@ -30,49 +32,37 @@ def index():
     return render_template("search_form.html.jinja")
 
 
-@app.get("/login")
-def login_form():
+@app.get("/settings")
+def settings():
     if "c_user" in session:
-        return redirect(url_for("profile"))
+        try:
+            scraper = get_scraper()
+            user_name = scraper.get_user_name()
+        except FacebookApiError:
+            user_name = None
     else:
-        return render_template("login_form.html.jinja")
+        user_name = None
+
+    return render_template(
+        "settings.html.jinja",
+        c_user=session.get("c_user", ""),
+        xs=session.get("xs", ""),
+        user_name=user_name,
+    )
 
 
-@app.get("/profile")
-def profile():
-    if "c_user" not in session:
-        return redirect(url_for("login_form"))
-    scraper = get_scraper()
-    return render_template("profile.html.jinja", user_name=scraper.get_user_name())
+@app.post("/settings")
+def save_settings():
+    c_user = request.form["c_user"]
+    xs = request.form["xs"]
 
+    if not re.fullmatch("\\d+", c_user):
+        raise Exception("c_user must be numeric")
 
-@app.post("/login")
-def login():
-    # TODO validate credentials
-    try:
-        auth_cookies = FacebookAuthCookies(
-            int(request.form["c_user"]), request.form["xs"]
-        )
-    except ValueError:
-        return redirect(url_for("login"))
+    session["c_user"] = c_user
+    session["xs"] = xs
 
-    try:
-        facebook_client = FacebookClient(auth_cookies)
-        facebook_client.CometSettingsDropdownTriggerQuery()
-    except FacebookApiError, ValueError:
-        return redirect(url_for("login"))
-
-    session["c_user"] = request.form["c_user"]
-    session["xs"] = request.form["xs"]
-    return redirect(url_for("index"))
-
-
-@app.post("/logout")
-def logout():
-    print("asdf")
-    session.pop("c_user", None)
-    session.pop("xs", None)
-    return redirect(url_for("login_form"))
+    return redirect(url_for("settings"))
 
 
 @app.get("/search")

@@ -48,7 +48,7 @@ class FacebookClient:
             if match is not None:
                 return match["token"].decode()
 
-        assert False
+        raise FacebookApiError("Can't find dtsg")
 
     def _graphql_query(
         self,

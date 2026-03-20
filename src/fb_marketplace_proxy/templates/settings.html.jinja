@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Settings</title>
+		<style>
+			form {
+				width: 300px;
+			}
+			.field {
+				display: flex;
+				justify-content: space-between;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Settings</h1>
+		{% if user_name is not none %}
+			<p>Logged in as {{ user_name }}</p>
+		{% endif %}
+		<form action="settings" method="POST">
+			<div class="field" />
+				<label for="c_user">c_user</label>
+				<input type="input" pattern="\d+" name="c_user" id="c_user" value="{{ c_user }}" required />
+			</div>
+			<div class="field" />
+				<label for="xs">xs</label>
+				<input type="password" name="xs" id="xs" value="{{ xs }}" required />
+			</div>
+			<input type="submit" value="Save" />
+		</form>
+	</body>
+</html>
