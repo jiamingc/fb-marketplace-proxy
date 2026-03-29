@@ -145,3 +145,15 @@ class FacebookClient:
                 "showNewToast": False,
             },
         )
+
+    def CometMarketplaceMessageSellerMutation(self, listing_id: int, message: str):
+        return self._graphql_query(
+            29483122031334726,
+            {
+                "input": {
+                    "listing_id": listing_id,
+                    "message": message,
+                    "actor_id": self.auth_cookies and self.auth_cookies.c_user,
+                }
+            },
+        )

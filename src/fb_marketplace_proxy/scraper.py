@@ -148,3 +148,11 @@ class Scraper:
             return None
         else:
             return data["viewer"]["actor"]["name"]
+
+    def message_seller(self, listing_id: int, message: str) -> str:
+        data = self.facebook_client.CometMarketplaceMessageSellerMutation(
+            listing_id, message
+        )
+
+        thread_id = data["marketplace_message_seller"]["thread_id"]
+        return f"https://www.facebook.com/messages/t/{thread_id}/"

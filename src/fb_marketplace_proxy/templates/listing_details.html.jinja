@@ -9,5 +9,12 @@
 			<img src="{{ url }}" height="200" />
 		{% endfor %}
 		<pre>{{ description }}</pre>
+		<h3>Message Seller</h3>
+		<form action="/message_seller" method="POST">
+			<input type="hidden" name="listing_id" value="{{ listing_id }}"/>
+			<textarea name="message" rows="5" cols="50"></textarea>
+			<br />
+			<input type="submit" value="Send"/>
+		</form>
 	</body>
 </html>

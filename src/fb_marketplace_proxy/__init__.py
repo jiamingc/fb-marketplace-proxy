@@ -85,4 +85,20 @@ def search():
 def listing_details(listing_id: int):
     scraper = get_scraper()
     details = scraper.fetch_listing_details(listing_id)
-    return render_template("listing_details.html.jinja", **details)
+    return render_template(
+        "listing_details.html.jinja", listing_id=listing_id, **details
+    )
+
+
+@app.post("/message_seller")
+def message_seller():
+    # TODO make sure I'm logged in
+    scraper = get_scraper()
+
+    listing_id = int(request.form["listing_id"])
+    message = request.form["message"]
+    print(listing_id)
+    print(message)
+
+    chat_thread_url = scraper.message_seller(listing_id, message)
+    return redirect(chat_thread_url)

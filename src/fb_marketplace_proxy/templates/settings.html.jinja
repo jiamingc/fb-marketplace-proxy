@@ -17,7 +17,7 @@
 		{% if user_name is not none %}
 			<p>Logged in as {{ user_name }}</p>
 		{% endif %}
-		<form action="settings" method="POST">
+		<form action="/settings" method="POST">
 			<div class="field" />
 				<label for="c_user">c_user</label>
 				<input type="input" pattern="\d+" name="c_user" id="c_user" value="{{ c_user }}" required />
