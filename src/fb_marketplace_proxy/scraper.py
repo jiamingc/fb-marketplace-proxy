@@ -1,7 +1,12 @@
 from datetime import datetime
 from typing import Any
-from .facebook import FacebookClient, FacebookApiError
-from typing import NamedTuple, TypedDict
+from .facebook import (
+    FacebookClient,
+    FacebookApiError,
+    FacebookMarketplaceCondition,
+    FacebookMarketplaceDeliveryType,
+)
+from typing import NamedTuple, TypedDict, BinaryIO
 
 
 class SearchResult(TypedDict):
@@ -156,3 +161,23 @@ class Scraper:
 
         thread_id = data["marketplace_message_seller"]["thread_id"]
         return f"https://www.facebook.com/messages/t/{thread_id}/"
+
+    def upload_photo(self, image: BinaryIO) -> int:
+        response = self.facebook_client.uploadPhoto(image)
+        return int(response["payload"]["photoID"])
+
+    def create_listing(
+        self,
+        title: str,
+        description: str,
+        photos: list[BinaryIO],
+        price: int,
+        condition: FacebookMarketplaceCondition,
+        delivery_types: list[FacebookMarketplaceDeliveryType],
+    ) -> int:
+        photo_ids = [self.upload_photo(photo) for photo in photos]
+        data = self.facebook_client.useCometMarketplaceListingCreateMutation(
+            title, description, photo_ids, price, condition, delivery_types
+        )
+
+        return int(data["marketplace_listing_create"]["listing"]["id"])

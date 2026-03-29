@@ -2,6 +2,7 @@ import json
 from functools import cache
 from typing import Any, NamedTuple, BinaryIO
 import re
+from enum import StrEnum, IntEnum
 
 import requests
 
@@ -9,6 +10,26 @@ import requests
 class FacebookAuthCookies(NamedTuple):
     c_user: int
     xs: str
+
+
+class FacebookMarketplaceDeliveryType(StrEnum):
+    IN_PERSON = "IN_PERSON"
+    PUBLIC_MEETUP = "PUBLIC_MEETUP"
+    DOOR_PICKUP = "DOOR_PICKUP"
+    DOOR_DROPOFF = "DOOR_DROPOFF"
+
+
+class FacebookMarketplaceCondition(StrEnum):
+    NEW = "new"
+    USED_LIKE_NEW = "used_like_new"
+    USED_GOOD = "used_good"
+    USED_FAIR = "used_fair"
+
+
+class FacebookMarketplaceCategory(IntEnum):
+    NONE = 0
+    MISCELLANEOUS = 144248014304211
+    BOOKS = 819915902202289
 
 
 class FacebookApiError(Exception):
@@ -25,7 +46,6 @@ class FacebookClient:
     @classmethod
     @cache
     def _get_dtsg(cls, auth_cookies: FacebookAuthCookies) -> str:
-        print("fetching dtsg")
         response = requests.get(
             "https://www.facebook.com/bookmarks",
             cookies={
@@ -57,6 +77,8 @@ class FacebookClient:
         response = requests.post(
             "https://www.facebook.com/api/graphql/",
             data={
+                "__a": 1,
+                "__comet_req": 1,
                 "doc_id": doc_id,
                 "variables": json.dumps(variables),
                 "fb_dtsg": self.dtsg,
@@ -157,8 +179,46 @@ class FacebookClient:
             },
         )
 
-    def uploadImage(self, image: BinaryIO) -> int:
+    def useCometMarketplaceListingCreateMutation(
+        self,
+        title: str,
+        description: str,
+        photo_ids: list[int],
+        price: int,
+        condition: FacebookMarketplaceCondition,
+        delivery_types: list[FacebookMarketplaceDeliveryType],
+    ):
+        return self._graphql_query(
+            9551550371629242,
+            {
+                "input": {
+                    "actor_id": self.auth_cookies and self.auth_cookies.c_user,
+                    "client_mutation_id": "0",
+                    "audience": {"marketplace": {"marketplace_id": "1663689853903557"}},
+                    "data": {
+                        "common": {
+                            "attribute_data_json": json.dumps({"condition": condition}),
+                            "category_id": FacebookMarketplaceCategory.NONE,
+                            "delivery_types": delivery_types,
+                            "description": {
+                                "text": description,
+                            },
+                            "item_price": {
+                                "currency": "USD",
+                                "price": price,
+                            },
+                            # "latitude": 37.3935,  # TODO make configurable
+                            # "longitude": -122.0791,  # TODO make configurable
+                            "title": title,
+                            # "video_ids": [],
+                            "photo_ids": photo_ids,
+                        }
+                    },
+                }
+            },
+        )
 
+    def uploadPhoto(self, image: BinaryIO):
         response = requests.post(
             "https://upload.facebook.com/ajax/react_composer/attachments/photo/upload",
             params={"__a": "1", "fb_dtsg": self.dtsg},
@@ -171,10 +231,7 @@ class FacebookClient:
             files={
                 "source": (None, "8"),
                 "farr": ("blob", image),
-                # TODO make sure I don't need to give mimetype
-                # "farr": ("blob", image, mimetype),
             },
         )
 
-        response_json = json.loads(response.text[9:])
-        return int(response_json["payload"]["photoID"])
+        return json.loads(response.text[9:])
