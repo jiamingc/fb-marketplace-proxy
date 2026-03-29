@@ -1,7 +1,6 @@
 import json
 from functools import cache
-from typing import Any
-from typing import NamedTuple
+from typing import Any, NamedTuple, BinaryIO
 import re
 
 import requests
@@ -157,3 +156,25 @@ class FacebookClient:
                 }
             },
         )
+
+    def uploadImage(self, image: BinaryIO) -> int:
+
+        response = requests.post(
+            "https://upload.facebook.com/ajax/react_composer/attachments/photo/upload",
+            params={"__a": "1", "fb_dtsg": self.dtsg},
+            cookies=self.auth_cookies
+            and {"c_user": str(self.auth_cookies.c_user), "xs": self.auth_cookies.xs},
+            headers={
+                "User-Agent": self.USER_AGENT,
+                "Sec-Fetch-Site": "same-site",
+            },
+            files={
+                "source": (None, "8"),
+                "farr": ("blob", image),
+                # TODO make sure I don't need to give mimetype
+                # "farr": ("blob", image, mimetype),
+            },
+        )
+
+        response_json = json.loads(response.text[9:])
+        return int(response_json["payload"]["photoID"])
