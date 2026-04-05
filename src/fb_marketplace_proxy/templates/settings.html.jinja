@@ -5,10 +5,8 @@
 		<style>
 			form {
 				width: 300px;
-			}
-			.field {
-				display: flex;
-				justify-content: space-between;
+				display: grid;
+				grid-template-columns: auto auto;
 			}
 		</style>
 	</head>
@@ -18,14 +16,18 @@
 			<p>Logged in as {{ user_name }}</p>
 		{% endif %}
 		<form action="/settings" method="POST">
-			<div class="field" />
-				<label for="c_user">c_user</label>
-				<input type="input" pattern="\d+" name="c_user" id="c_user" value="{{ c_user }}" required />
-			</div>
-			<div class="field" />
-				<label for="xs">xs</label>
-				<input type="password" name="xs" id="xs" value="{{ xs }}" required />
-			</div>
+			<label for="c_user">c_user</label>
+			<input type="text" pattern="\d+" name="c_user" id="c_user" value="{{ c_user if c_user is not none }}" required />
+
+			<label for="xs">xs</label>
+			<input type="password" name="xs" id="xs" value="{{ xs if xs is not none }}" required />
+
+			<label for="latitude">latitude</label>
+			<input type="number" name="latitude" id="latitude" value="{{ latitude if latitude is not none }}" min="-90" max="90" step="any" />
+
+			<label for="longitude">longitude</label>
+			<input type="number" name="longitude" id="longitude" value="{{ longitude if longitude is not none }}" min="-180" max="180" step="any" />
+
 			<input type="submit" value="Save" />
 		</form>
 	</body>

@@ -6,7 +6,7 @@ from .facebook import (
     FacebookMarketplaceCondition,
     FacebookMarketplaceDeliveryType,
 )
-from typing import NamedTuple, TypedDict, BinaryIO
+from typing import NamedTuple, TypedDict, IO
 
 
 class SearchResult(TypedDict):
@@ -31,9 +31,15 @@ class Scraper:
     def __init__(self, facebook_client: FacebookClient):
         self.facebook_client = facebook_client
 
-    def search_listings(self, query: str, cursor: str | None = None) -> SearchResults:
+    def search_listings(
+        self,
+        query: str,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        cursor: str | None = None,
+    ) -> SearchResults:
         data = self.facebook_client.CometMarketplaceSearchContentContainerQuery(
-            query, cursor
+            query, latitude, longitude, cursor
         )
 
         listing_edges = data["marketplace_search"]["feed_units"]["edges"]
@@ -154,15 +160,14 @@ class Scraper:
         else:
             return data["viewer"]["actor"]["name"]
 
-    def message_seller(self, listing_id: int, message: str) -> str:
+    def message_seller(self, listing_id: int, message: str) -> int:
         data = self.facebook_client.CometMarketplaceMessageSellerMutation(
             listing_id, message
         )
 
-        thread_id = data["marketplace_message_seller"]["thread_id"]
-        return f"https://www.facebook.com/messages/t/{thread_id}/"
+        return data["marketplace_message_seller"]["thread_id"]
 
-    def upload_photo(self, image: BinaryIO) -> int:
+    def upload_photo(self, image: IO[bytes]) -> int:
         response = self.facebook_client.uploadPhoto(image)
         return int(response["payload"]["photoID"])
 
@@ -170,14 +175,23 @@ class Scraper:
         self,
         title: str,
         description: str,
-        photos: list[BinaryIO],
+        photos: list[IO[bytes]],
         price: int,
         condition: FacebookMarketplaceCondition,
         delivery_types: list[FacebookMarketplaceDeliveryType],
+        latitude: float,
+        longitude: float,
     ) -> int:
         photo_ids = [self.upload_photo(photo) for photo in photos]
         data = self.facebook_client.useCometMarketplaceListingCreateMutation(
-            title, description, photo_ids, price, condition, delivery_types
+            title,
+            description,
+            photo_ids,
+            price,
+            condition,
+            delivery_types,
+            latitude,
+            longitude,
         )
 
         return int(data["marketplace_listing_create"]["listing"]["id"])

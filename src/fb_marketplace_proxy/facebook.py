@@ -1,6 +1,6 @@
 import json
 from functools import cache
-from typing import Any, NamedTuple, BinaryIO
+from typing import Any, NamedTuple, IO
 import re
 from enum import StrEnum, IntEnum
 
@@ -109,7 +109,11 @@ class FacebookClient:
         return response_json["data"]
 
     def CometMarketplaceSearchContentContainerQuery(
-        self, query: str, cursor: str | None
+        self,
+        query: str,
+        latitude: float | None,
+        longitude: float | None,
+        cursor: str | None,
     ):
         return self._graphql_query(
             25360896583559734,
@@ -125,8 +129,8 @@ class FacebookClient:
                         # "commerce_search_and_rp_category_id": [],
                         # "commerce_search_and_rp_condition": None,
                         # "commerce_search_and_rp_ctime_days": None,
-                        # "filter_location_latitude": 37.394714355469,
-                        # "filter_location_longitude": -122.07458496094,
+                        "filter_location_latitude": latitude,
+                        "filter_location_longitude": longitude,
                         # "filter_price_lower_bound": 0,
                         # "filter_price_upper_bound": 214748364700,
                         # "filter_radius_km": 65,
@@ -187,6 +191,8 @@ class FacebookClient:
         price: int,
         condition: FacebookMarketplaceCondition,
         delivery_types: list[FacebookMarketplaceDeliveryType],
+        latitude: float,
+        longitude: float,
     ):
         return self._graphql_query(
             9551550371629242,
@@ -207,8 +213,8 @@ class FacebookClient:
                                 "currency": "USD",
                                 "price": price,
                             },
-                            # "latitude": 37.3935,  # TODO make configurable
-                            # "longitude": -122.0791,  # TODO make configurable
+                            "latitude": latitude,
+                            "longitude": longitude,
                             "title": title,
                             # "video_ids": [],
                             "photo_ids": photo_ids,
@@ -218,7 +224,7 @@ class FacebookClient:
             },
         )
 
-    def uploadPhoto(self, image: BinaryIO):
+    def uploadPhoto(self, image: IO[bytes]):
         response = requests.post(
             "https://upload.facebook.com/ajax/react_composer/attachments/photo/upload",
             params={"__a": "1", "fb_dtsg": self.dtsg},
