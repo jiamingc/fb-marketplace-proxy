@@ -1,4 +1,5 @@
 import json
+from uuid import uuid4
 from functools import cache
 from typing import Any, NamedTuple, IO
 import re
@@ -241,3 +242,23 @@ class FacebookClient:
         )
 
         return json.loads(response.text[9:])
+
+    def LSPlatformGraphQLLightspeedRequestQuery(self):
+        # TODO make sense of what this does
+        return self._graphql_query(
+            9697184873702141,
+            {
+                "deviceId": str(uuid4()),
+                "requestId": 0,
+                "requestPayload": json.dumps(
+                    {
+                        "database": 1,
+                        "epoch_id": 0,
+                        "last_applied_cursor": None,
+                        "sync_params": '{"locale":"en_US"}',
+                        "version": 27510149861906152,
+                    }
+                ),
+                "requestType": 1,
+            },
+        )
