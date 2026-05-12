@@ -1,0 +1,53 @@
+{% set nav_entries = [
+	("search", "/", "Search"),
+	("listing_create", "/listing/create", "New Listing"),
+	("settings", "/settings", "Settings"),
+] -%}
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>{% block title %}{% endblock %}</title>
+		<style>
+			nav ul {
+				list-style: none;
+				padding: 0;
+
+				li {
+					display: inline-block;
+
+					a {
+						color: inherit;
+						text-decoration: none;
+					}
+
+					+ li::before {
+						content: "|";
+					}
+				}
+
+				li.active a {
+					text-decoration: underline;
+				}
+			}
+
+			form {
+				width: 300px;
+				display: grid;
+				grid-template-columns: auto auto;
+			}
+		</style>
+	</head>
+	<body>
+		<nav>
+			<ul>
+				{% for id, href, label in nav_entries %}
+					<li{% if id == active_nav_entry %} class="active"{% endif %}>
+						<a href="{{ href|e }}">{{ label|e }}</a>
+					</li>
+				{% endfor %}
+			</ul>
+		</nav>
+		<h1>{{ self.title() }}</h1>
+		{% block content required %}{% endblock %}
+	</body>
+</html>

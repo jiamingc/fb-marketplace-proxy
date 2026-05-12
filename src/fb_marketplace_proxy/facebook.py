@@ -130,8 +130,14 @@ class FacebookClient:
                         # "commerce_search_and_rp_category_id": [],
                         # "commerce_search_and_rp_condition": None,
                         # "commerce_search_and_rp_ctime_days": None,
-                        "filter_location_latitude": latitude,
-                        "filter_location_longitude": longitude,
+                        **(
+                            {
+                                "filter_location_latitude": latitude,
+                                "filter_location_longitude": longitude,
+                            }
+                            if latitude is not None and longitude is not None
+                            else {}
+                        ),
                         # "filter_price_lower_bound": 0,
                         # "filter_price_upper_bound": 214748364700,
                         # "filter_radius_km": 65,

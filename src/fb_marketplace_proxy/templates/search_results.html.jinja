@@ -1,33 +1,28 @@
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>Search Results</title>
-	</head>
-	<body>
-		<h1>Search Results</h1>
-		<form action="/search" method="get">
-			<input type="text" value="{{ query }}" name="query" />
-			<input type="submit" />
-		</form>
-		{% if results %}
-			<ul>
-			{% for result in results %}
-				<li style="display: flex;">
-					<img src="{{ result.image }}" height="200" />
-					<div>
-						<a href="/listing/{{ result.id }}">
-							<h2>{{ result.title }}</h2>
-						</a>
-						<pre>{{ result.description }}</pre>
-					</div>
-				</li>
-			{% endfor %}
-			</ul>
-		{% else %}
-			<p>No results</p>
-		{% endif %}
-		{% if end_cursor is not none %}
-			<a href="{{ url_for("search", query=query, cursor=end_cursor) }}">Next Page</a>
-		{% endif %}
-	</body>
-</html>
+{% extends "layout.html.jinja" %}
+{% block title %}Search Results{% endblock %}
+{% block content %}
+	<form action="/search" method="get">
+		<input type="text" value="{{ query }}" name="query" />
+		<input type="submit" />
+	</form>
+	{% if results %}
+		<ul>
+		{% for result in results %}
+			<li style="display: flex;">
+				<img src="{{ result.image }}" height="200" />
+				<div>
+					<a href="/listing/{{ result.id }}">
+						<h2>{{ result.title }}</h2>
+					</a>
+					<pre>{{ result.description }}</pre>
+				</div>
+			</li>
+		{% endfor %}
+		</ul>
+	{% else %}
+		<p>No results</p>
+	{% endif %}
+	{% if end_cursor is not none %}
+		<a href="{{ url_for("search", query=query, cursor=end_cursor) }}">Next Page</a>
+	{% endif %}
+{% endblock %}

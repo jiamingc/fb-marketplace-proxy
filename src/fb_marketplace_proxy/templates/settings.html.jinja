@@ -1,34 +1,23 @@
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>Settings</title>
-		<style>
-			form {
-				width: 300px;
-				display: grid;
-				grid-template-columns: auto auto;
-			}
-		</style>
-	</head>
-	<body>
-		<h1>Settings</h1>
-		{% if user_name is not none %}
-			<p>Logged in as {{ user_name }}</p>
-		{% endif %}
-		<form action="/settings" method="POST">
-			<label for="c_user">c_user</label>
-			<input type="text" pattern="\d+" name="c_user" id="c_user" value="{{ c_user if c_user is not none }}" required />
+{% extends "layout.html.jinja" %}
+{% set active_nav_entry = "settings" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+	{% if user_name is not none %}
+		<p>Logged in as {{ user_name }}</p>
+	{% endif %}
+	<form action="/settings" method="POST">
+		<label for="c_user">c_user</label>
+		<input type="text" pattern="\d+" name="c_user" id="c_user" value="{{ c_user if c_user is not none }}" required />
 
-			<label for="xs">xs</label>
-			<input type="password" name="xs" id="xs" value="{{ xs if xs is not none }}" required />
+		<label for="xs">xs</label>
+		<input type="password" name="xs" id="xs" value="{{ xs if xs is not none }}" required />
 
-			<label for="latitude">latitude</label>
-			<input type="number" name="latitude" id="latitude" value="{{ latitude if latitude is not none }}" min="-90" max="90" step="any" />
+		<label for="latitude">latitude</label>
+		<input type="number" name="latitude" id="latitude" value="{{ latitude if latitude is not none }}" min="-90" max="90" step="any" />
 
-			<label for="longitude">longitude</label>
-			<input type="number" name="longitude" id="longitude" value="{{ longitude if longitude is not none }}" min="-180" max="180" step="any" />
+		<label for="longitude">longitude</label>
+		<input type="number" name="longitude" id="longitude" value="{{ longitude if longitude is not none }}" min="-180" max="180" step="any" />
 
-			<input type="submit" value="Save" />
-		</form>
-	</body>
-</html>
+		<input type="submit" value="Save" />
+	</form>
+{% endblock %}

@@ -1,20 +1,15 @@
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>{{ title }}</title>
-	</head>
-	<body>
-		<h1>{{ title }}</h1>
-		{% for url in images %}
-			<img src="{{ url }}" height="200" />
-		{% endfor %}
-		<pre>{{ description }}</pre>
-		<h3>Message Seller</h3>
-		<form action="/message_seller" method="POST">
-			<input type="hidden" name="listing_id" value="{{ listing_id }}"/>
-			<textarea name="message" rows="5" cols="50"></textarea>
-			<br />
-			<input type="submit" value="Send"/>
-		</form>
-	</body>
-</html>
+{% extends "layout.html.jinja" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+	{% for url in images %}
+		<img src="{{ url }}" height="200" />
+	{% endfor %}
+	<pre>{{ description }}</pre>
+	<h3>Message Seller</h3>
+	<form action="/message_seller" method="POST">
+		<input type="hidden" name="listing_id" value="{{ listing_id }}"/>
+		<textarea name="message" rows="5" cols="50"></textarea>
+		<br />
+		<input type="submit" value="Send"/>
+	</form>
+{% endblock %}
