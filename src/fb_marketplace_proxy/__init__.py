@@ -118,8 +118,32 @@ def listing_details(listing_id: int):
     scraper = get_scraper()
     details = scraper.fetch_listing_details(listing_id)
     return render_template(
-        "listing_details.html.jinja", listing_id=listing_id, **details
+        "listing_details.html.jinja", listing_id=listing_id, details=details
     )
+
+
+@app.post("/listing/save")
+def save_listing():
+    scraper = get_scraper()
+
+    listing_id = request.form["listing_id"]
+    story_id = request.form["story_id"]
+
+    scraper.save_listing(story_id)
+
+    return redirect(url_for("listing_details", listing_id=listing_id))
+
+
+@app.post("/listing/unsave")
+def unsave_listing():
+    scraper = get_scraper()
+
+    listing_id = request.form["listing_id"]
+    story_id = request.form["story_id"]
+
+    scraper.unsave_listing(story_id)
+
+    return redirect(url_for("listing_details", listing_id=listing_id))
 
 
 @app.post("/message_seller")

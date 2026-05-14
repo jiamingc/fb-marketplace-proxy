@@ -25,6 +25,12 @@ class ListingDetails(TypedDict):
     title: str
     description: str
     images: list[str]
+    story: StoryDetails | None
+
+
+class StoryDetails(TypedDict):
+    id: str
+    saved: bool
 
 
 class Scraper:
@@ -146,10 +152,20 @@ class Scraper:
             + item["redacted_description"]["text"]
         )
 
+        story_details = (
+            StoryDetails(
+                id=story["id"],
+                saved=story["save_info"]["viewer_save_state"] == "SAVED",
+            )
+            if (story := item["story"]) is not None
+            else None
+        )
+
         return ListingDetails(
             title=title,
             description=description,
             images=self.fetch_images(listing_id),
+            story=story_details,
         )
 
     def get_user_name(self) -> str | None:
@@ -195,3 +211,14 @@ class Scraper:
         )
 
         return int(data["marketplace_listing_create"]["listing"]["id"])
+
+    def save_listing(self, story_id: str):
+        data = self.facebook_client.useCometMarketplaceSaveAsStoryMutation(story_id)
+        assert data["story_save"]["story"]["save_info"]["viewer_save_state"] != "SAVED"
+
+    def unsave_listing(self, story_id: str):
+        data = self.facebook_client.useCometMarketplaceUnsaveAsStoryMutation(story_id)
+        assert (
+            data["story_unsave"]["story"]["save_info"]["viewer_save_state"]
+            != "NOT_SAVED"
+        )

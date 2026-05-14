@@ -150,6 +150,12 @@ class FacebookClient:
             },
         )
 
+    def CometMarketplaceYouSavedContentContainerQuery(self):
+        return self._graphql_query(
+            26547817714884442,
+            {"scale": 1},
+        )
+
     def MarketplacePDPC2CMediaViewerWithImagesQuery(self, listing_id: int):
         return self._graphql_query(
             10059604367394414,
@@ -227,6 +233,32 @@ class FacebookClient:
                             "photo_ids": photo_ids,
                         }
                     },
+                }
+            },
+        )
+
+    def useCometMarketplaceSaveAsStoryMutation(self, story_id: str):
+        return self._graphql_query(
+            9587699291311838,
+            {
+                "input": {
+                    "actor_id": self.auth_cookies and self.auth_cookies.c_user,
+                    "save_mechanism": "SAVED_ADD",
+                    "save_surface": "MARKETPLACE_PRODUCT_DETAILS",
+                    "story_id": story_id,
+                }
+            },
+        )
+
+    def useCometMarketplaceUnsaveAsStoryMutation(self, story_id: str):
+        return self._graphql_query(
+            24145675458439589,
+            {
+                "input": {
+                    "actor_id": self.auth_cookies and self.auth_cookies.c_user,
+                    "save_mechanism": "SAVED_ADD",
+                    "save_surface": "MARKETPLACE_PRODUCT_DETAILS",
+                    "story_id": story_id,
                 }
             },
         )

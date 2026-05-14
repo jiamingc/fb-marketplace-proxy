@@ -1,10 +1,27 @@
 {% extends "layout.html.jinja" %}
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ details.title }}{% endblock %}
 {% block content %}
-	{% for url in images %}
-		<img src="{{ url }}" height="200" />
+	{% for url in details.images %}
+		<img src="{{ details.url }}" height="200" />
 	{% endfor %}
-	<pre>{{ description }}</pre>
+	<pre>{{ details.description }}</pre>
+
+	{% if details.story %}
+		{% if details.story.saved %}
+			<form action="/listing/unsave" method="POST">
+				<input type="hidden" name="listing_id" value="{{ listing_id }}" />
+				<input type="hidden" name="story_id" value="{{ details.story.id }}" />
+				<input type="submit" value="Unsave" />
+			</form>
+		{% else %}
+			<form action="/listing/save" method="POST">
+				<input type="hidden" name="listing_id" value="{{ listing_id }}" />
+				<input type="hidden" name="story_id" value="{{ details.story.id }}" />
+				<input type="submit" value="Save" />
+			</form>
+		{% endif %}
+	{% endif %}
+
 	<h3>Message Seller</h3>
 	<form action="/message_seller" method="POST">
 		<input type="hidden" name="listing_id" value="{{ listing_id }}"/>
