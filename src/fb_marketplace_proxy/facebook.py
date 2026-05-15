@@ -20,6 +20,15 @@ class FacebookMarketplaceDeliveryType(StrEnum):
     DOOR_DROPOFF = "DOOR_DROPOFF"
 
 
+class FacebookMarketplaceSellerThreadLabel(StrEnum):
+    AWAITING_PAYMENT = "Pending payment"
+    PAID = "Paid"
+    NEEDS_SHIPPING = "To be shipped"
+    SHIPPED = "Shipped"
+    CASH_ON_DELIVERY = "Cash on delivery"
+    COMPLETED = "Completed"
+
+
 class FacebookMarketplaceCondition(StrEnum):
     NEW = "new"
     USED_LIKE_NEW = "used_like_new"
@@ -197,6 +206,28 @@ class FacebookClient:
                     "message": message,
                     "actor_id": self.auth_cookies and self.auth_cookies.c_user,
                 }
+            },
+        )
+
+    def CometMarketplaceInboxBuyerTabViewContainerQuery(self):
+        return self._graphql_query(26151817207777665, {})
+
+    def CometMarketplaceInboxSellerTabThreadViewContainerQuery(
+        self, filter_label: FacebookMarketplaceSellerThreadLabel | None
+    ):
+        return self._graphql_query(
+            26018704387747906,
+            {
+                "filterLabels": [
+                    {
+                        "label_category": "THREAD_LABEL",
+                        "label_string": filter_label.value,
+                        "label_type": filter_label.name,
+                    }
+                ]
+                if filter_label
+                else {},
+                "lookBackInDays": 60 if filter_label else None,
             },
         )
 
