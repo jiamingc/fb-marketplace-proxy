@@ -95,6 +95,19 @@ def save_settings():
     return redirect(url_for("settings"))
 
 
+@app.get("/saved")
+def saved():
+    scraper = get_scraper()
+    cursor = request.args.get("cursor")
+    saves, end_cursor = scraper.fetch_saved_listings(cursor)
+    return render_template(
+        "saved_listings.html.jinja",
+        longitude=session.get("longitude"),
+        saves=saves,
+        end_cursor=end_cursor,
+    )
+
+
 @app.get("/search")
 def search():
     scraper = get_scraper()
@@ -168,7 +181,6 @@ def create_listing():
     scraper = get_scraper()
 
     title = request.form["title"]
-    description = request.form["description"]
     description = request.form["description"]
     photos = [file.stream for file in request.files.getlist("photos")]
     price = int(request.form["price"])

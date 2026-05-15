@@ -77,6 +77,22 @@ class Scraper:
 
         return SearchResults(parsed_listings, cursor)
 
+    def fetch_saved_listings(self, cursor: str | None = None) -> SearchResults:
+        data = self.facebook_client.CometMarketplaceYouSavedContentPaginationQuery(
+            cursor
+        )
+        all_saves = data["viewer"]["saver_info"]["all_saves"]
+        edges = all_saves["edges"]
+        page_info = all_saves["page_info"]
+
+        listings = [edge["node"]["savable"] for edge in edges]
+        parsed_listings = [self._extract_search_result(listing) for listing in listings]
+
+        cursor = page_info["end_cursor"] if page_info["has_next_page"] else None
+
+        # TODO does this have pagination?
+        return SearchResults(parsed_listings, cursor)
+
     def _extract_search_result(self, listing: dict[str, Any]) -> SearchResult:
         try:
             price = listing["listing_price"]["formatted_amount"]

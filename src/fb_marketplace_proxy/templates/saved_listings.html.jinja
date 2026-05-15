@@ -1,0 +1,21 @@
+{% extends "layout.html.jinja" %}
+{% set active_nav_entry = "saved" %}
+{% block title %}Saved Listings{% endblock %}
+{% block content %}
+	<ul>
+	{% for save in saves %}
+		<li style="display: flex;">
+			<img src="{{ save.image }}" height="200" />
+			<div>
+				<a href="/listing/{{ save.id }}">
+					<h2>{{ save.title }}</h2>
+				</a>
+				<pre>{{ save.description }}</pre>
+			</div>
+		</li>
+	{% endfor %}
+	</ul>
+	{% if end_cursor is not none %}
+		<a href="{{ url_for("saved", cursor=end_cursor) }}">Next Page</a>
+	{% endif %}
+{% endblock %}

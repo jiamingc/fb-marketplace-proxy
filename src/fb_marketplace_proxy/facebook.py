@@ -150,10 +150,14 @@ class FacebookClient:
             },
         )
 
-    def CometMarketplaceYouSavedContentContainerQuery(self):
+    def CometMarketplaceYouSavedContentPaginationQuery(self, cursor: str | None = None):
         return self._graphql_query(
-            26547817714884442,
-            {"scale": 1},
+            26376372915396340,
+            {
+                "count": 6,
+                "cursor": cursor,
+                "scale": 1,
+            },
         )
 
     def MarketplacePDPC2CMediaViewerWithImagesQuery(self, listing_id: int):
