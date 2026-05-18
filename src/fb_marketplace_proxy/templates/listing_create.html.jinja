@@ -2,7 +2,7 @@
 {% set active_nav_entry = "listing_create" %}
 {% block title %}New Listing{% endblock %}
 {% block content %}
-	<form action="/listing/create" method="post" enctype="multipart/form-data">
+	<form class="grid-form" action="/listing/create" method="post" enctype="multipart/form-data">
 		<label for="title">Title</label>
 		<input type="text" name="title" id="title" required />
 

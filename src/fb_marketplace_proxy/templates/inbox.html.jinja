@@ -1,0 +1,38 @@
+{% extends "layout.html.jinja" %}
+{% set active_nav_entry = "inbox" %}
+{% block title %}Inbox{% endblock %}
+{% block content %}
+	<ul>
+	{% for thread in threads %}
+		<li style="display: flex;">
+			{% if thread.listing_info %}
+				<img src="{{ thread.listing_info.image }}" height="100" />
+			{% else %}
+				<svg height="100" width="100">
+					<rect width="100%" height="100%" fill="gray" />
+				</svg>
+			{% endif %}
+			<div style="display: flex; flex-direction: column;">
+				<a href="https://www.facebook.com/messages/t/{{ thread.id }}/">
+					<h2 style="margin: 0;">
+						{{ thread.peer_name }}
+					</h2>
+				</a>
+				{% if thread.listing_info %}
+					<a href="/listing/{{ thread.listing_info.id }}">
+						{{ thread.listing_info.title }}
+					</a>
+				{% else %}
+					<div>Deleted Listing</div>
+				{% endif %}
+				<div style="font-style: italic;" />
+				{{ thread.snippet }}
+				</div>
+			</div>
+		</li>
+	{% endfor %}
+	</ul>
+	{% if end_cursor is not none %}
+		<a href="{{ url_for("saved", cursor=end_cursor) }}">Next Page</a>
+	{% endif %}
+{% endblock %}

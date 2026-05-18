@@ -9,16 +9,16 @@ from .facebook import (
 from typing import NamedTuple, TypedDict, IO
 
 
+class PaginatedList[T](NamedTuple):
+    items: list[T]
+    end_cursor: str | None
+
+
 class SearchResult(TypedDict):
     title: str
     image: str
     description: str
     id: int
-
-
-class SearchResults(NamedTuple):
-    results: list[SearchResult]
-    end_cursor: str | None
 
 
 class ListingDetails(TypedDict):
@@ -33,6 +33,28 @@ class StoryDetails(TypedDict):
     saved: bool
 
 
+class MessageThread(TypedDict):
+    id: int
+    unread_count: int
+    snippet: str
+    peer_name: str
+    listing_info: MessageThreadListingInfo | None
+
+
+class MessageThreadListingInfo(TypedDict):
+    id: int
+    title: str
+    image: str
+
+
+def parse_paginated_connection(connection: dict) -> tuple[list, str | None]:
+    nodes = [edge["node"] for edge in connection["edges"]]
+    page_info = connection["page_info"]
+    end_cursor = page_info["end_cursor"] if page_info["has_next_page"] else None
+
+    return nodes, end_cursor
+
+
 class Scraper:
     def __init__(self, facebook_client: FacebookClient):
         self.facebook_client = facebook_client
@@ -43,55 +65,52 @@ class Scraper:
         latitude: float | None = None,
         longitude: float | None = None,
         cursor: str | None = None,
-    ) -> SearchResults:
+    ) -> PaginatedList[SearchResult]:
         data = self.facebook_client.CometMarketplaceSearchContentContainerQuery(
             query, latitude, longitude, cursor
         )
 
-        listing_edges = data["marketplace_search"]["feed_units"]["edges"]
-        for idx, edge in enumerate(listing_edges):
-            node_type = edge["node"]["__typename"]
-            if node_type == "MarketplaceFeedListingStoryObject":
+        feed_units, end_cursor = parse_paginated_connection(
+            data["marketplace_search"]["feed_units"]
+        )
+        for idx, feed_unit in enumerate(feed_units):
+            unit_type = feed_unit["__typename"]
+            if unit_type == "MarketplaceFeedListingStoryObject":
                 continue
 
-            assert node_type in [
+            assert unit_type in [
                 "MarketplaceSearchFeedHeader",
                 "MarketplaceSearchFeedNoResults",
-            ], f"unexpected node type: {node_type}"
+            ], f"unexpected feed unit type: {unit_type}"
 
             # We found a feed header, which marks the end of the regular search results
-            listing_edges = listing_edges[:idx]
-            cursor = None
+            feed_units = feed_units[:idx]
+            end_cursor = None
             break
         else:
-            if len(listing_edges) == 24:
-                cursor = data["marketplace_search"]["feed_units"]["page_info"][
-                    "end_cursor"
-                ]
-            else:
+            if len(feed_units) < 24:
                 # Sometimes a cursor for irrelevant results is given after the end of relevant results
-                cursor = None
+                end_cursor = None
 
-        listings = [edge["node"]["listing"] for edge in listing_edges]
+        listings = [feed_unit["listing"] for feed_unit in feed_units]
         parsed_listings = [self._extract_search_result(listing) for listing in listings]
 
-        return SearchResults(parsed_listings, cursor)
+        return PaginatedList(parsed_listings, end_cursor)
 
-    def fetch_saved_listings(self, cursor: str | None = None) -> SearchResults:
+    def fetch_saved_listings(
+        self, cursor: str | None = None
+    ) -> PaginatedList[SearchResult]:
         data = self.facebook_client.CometMarketplaceYouSavedContentPaginationQuery(
             cursor
         )
-        all_saves = data["viewer"]["saver_info"]["all_saves"]
-        edges = all_saves["edges"]
-        page_info = all_saves["page_info"]
+        saves, end_cursor = parse_paginated_connection(
+            data["viewer"]["saver_info"]["all_saves"]
+        )
 
-        listings = [edge["node"]["savable"] for edge in edges]
+        listings = [save["savable"] for save in saves]
         parsed_listings = [self._extract_search_result(listing) for listing in listings]
 
-        cursor = page_info["end_cursor"] if page_info["has_next_page"] else None
-
-        # TODO does this have pagination?
-        return SearchResults(parsed_listings, cursor)
+        return PaginatedList(parsed_listings, end_cursor)
 
     def _extract_search_result(self, listing: dict[str, Any]) -> SearchResult:
         try:
@@ -230,11 +249,41 @@ class Scraper:
 
     def save_listing(self, story_id: str):
         data = self.facebook_client.useCometMarketplaceSaveAsStoryMutation(story_id)
-        assert data["story_save"]["story"]["save_info"]["viewer_save_state"] != "SAVED"
+        assert data["story_save"]["story"]["save_info"]["viewer_save_state"] == "SAVED"
 
     def unsave_listing(self, story_id: str):
         data = self.facebook_client.useCometMarketplaceUnsaveAsStoryMutation(story_id)
         assert (
             data["story_unsave"]["story"]["save_info"]["viewer_save_state"]
-            != "NOT_SAVED"
+            == "NOT_SAVED"
         )
+
+    def _extract_thread_info(self, thread: dict[str, Any]) -> MessageThread:
+        return MessageThread(
+            id=thread["thread_key"]["thread_fbid"],
+            unread_count=thread["unread_count"],
+            snippet=thread["messages"]["edges"][0]["node"]["snippet"],
+            peer_name=thread["other_participants"]["edges"][0]["node"][
+                "messaging_actor"
+            ]["name"],
+            listing_info=(item := thread["marketplace_thread_data"]["messageable_item"])
+            and MessageThreadListingInfo(
+                id=item["id"],
+                title=item["marketplace_listing_title"],
+                image=item["primary_listing_photo"]["image"]["uri"],
+            ),
+        )
+
+    def fetch_buyer_chat_threads(
+        self, cursor: str | None = None
+    ) -> PaginatedList[MessageThread]:
+        data = self.facebook_client.CometMarketplaceInboxBuyerTabViewPaginationQuery(
+            cursor
+        )
+        threads, end_cursor = parse_paginated_connection(
+            data["viewer"]["marketplaceInboxBuyerMessageThreads"]
+        )
+
+        parsed_threads = [self._extract_thread_info(thread) for thread in threads]
+
+        return PaginatedList(parsed_threads, end_cursor)

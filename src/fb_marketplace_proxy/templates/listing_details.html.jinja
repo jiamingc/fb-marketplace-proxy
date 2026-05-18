@@ -2,7 +2,7 @@
 {% block title %}{{ details.title }}{% endblock %}
 {% block content %}
 	{% for url in details.images %}
-		<img src="{{ details.url }}" height="200" />
+		<img src="{{ url }}" height="200" />
 	{% endfor %}
 	<pre>{{ details.description }}</pre>
 

@@ -1,6 +1,7 @@
 {% set nav_entries = [
 	("search", "/", "Search"),
 	("listing_create", "/listing/create", "New Listing"),
+	("inbox", "/inbox", "Inbox"),
 	("saved", "/saved", "Saved"),
 	("settings", "/settings", "Settings"),
 ] -%}
@@ -31,7 +32,7 @@
 				}
 			}
 
-			form {
+			.grid-form {
 				width: 300px;
 				display: grid;
 				grid-template-columns: auto auto;

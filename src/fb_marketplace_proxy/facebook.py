@@ -1,11 +1,14 @@
 import json
-from uuid import uuid4
-from functools import cache
-from typing import Any, NamedTuple, IO
 import re
-from enum import StrEnum, IntEnum
+from enum import IntEnum, StrEnum
+from functools import cache
+from json import JSONDecodeError
+from typing import IO, Any, NamedTuple
+from uuid import uuid4
 
 import requests
+
+JSON_HIJACKING_PREFIX = "for (;;);"
 
 
 class FacebookAuthCookies(NamedTuple):
@@ -105,7 +108,29 @@ class FacebookClient:
             else None,
         )
 
-        response_json = response.json()
+        try:
+            response_json = response.json()
+        except JSONDecodeError:
+            # Attempt to parse structured error message
+            if response.text.startswith(JSON_HIJACKING_PREFIX):
+                try:
+                    error = json.loads(
+                        response.text.removeprefix(JSON_HIJACKING_PREFIX)
+                    )
+                    raise FacebookApiError(
+                        "\n".join(
+                            [
+                                error["errorSummary"],
+                                error["errorDescription"],
+                                error["redirectTo"],
+                            ]
+                        )
+                    )
+                except JSONDecodeError:
+                    pass
+
+            raise FacebookApiError(f"Unexpected GraphQL response {response.text}")
+
         if "data" not in response_json:
             if "errors" in response_json:
                 raise FacebookApiError(
@@ -123,7 +148,7 @@ class FacebookClient:
         query: str,
         latitude: float | None,
         longitude: float | None,
-        cursor: str | None,
+        cursor: str | None = None,
     ):
         return self._graphql_query(
             25360896583559734,
@@ -209,8 +234,16 @@ class FacebookClient:
             },
         )
 
-    def CometMarketplaceInboxBuyerTabViewContainerQuery(self):
-        return self._graphql_query(26151817207777665, {})
+    def CometMarketplaceInboxBuyerTabViewPaginationQuery(
+        self, cursor: str | None = None
+    ):
+        return self._graphql_query(
+            26202731575990325,
+            {
+                "count": 12,
+                "cursor": cursor,
+            },
+        )
 
     def CometMarketplaceInboxSellerTabThreadViewContainerQuery(
         self, filter_label: FacebookMarketplaceSellerThreadLabel | None
@@ -314,7 +347,7 @@ class FacebookClient:
             },
         )
 
-        return json.loads(response.text[9:])
+        return json.loads(response.text.removeprefix(JSON_HIJACKING_PREFIX))
 
     def LSPlatformGraphQLLightspeedRequestQuery(self):
         # TODO make sense of what this does

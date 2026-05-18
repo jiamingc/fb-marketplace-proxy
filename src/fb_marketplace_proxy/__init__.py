@@ -102,8 +102,19 @@ def saved():
     saves, end_cursor = scraper.fetch_saved_listings(cursor)
     return render_template(
         "saved_listings.html.jinja",
-        longitude=session.get("longitude"),
         saves=saves,
+        end_cursor=end_cursor,
+    )
+
+
+@app.get("/inbox")
+def inbox():
+    scraper = get_scraper()
+    cursor = request.args.get("cursor")
+    threads, end_cursor = scraper.fetch_buyer_chat_threads(cursor)
+    return render_template(
+        "inbox.html.jinja",
+        threads=threads,
         end_cursor=end_cursor,
     )
 
