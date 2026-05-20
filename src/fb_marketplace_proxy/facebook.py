@@ -190,7 +190,6 @@ class FacebookClient:
             {
                 "count": 6,
                 "cursor": cursor,
-                "scale": 1,
             },
         )
 
@@ -245,12 +244,16 @@ class FacebookClient:
             },
         )
 
-    def CometMarketplaceInboxSellerTabThreadViewContainerQuery(
-        self, filter_label: FacebookMarketplaceSellerThreadLabel | None
+    def CometMarketplaceInboxSellerTabThreadViewPaginationQuery(
+        self,
+        filter_label: FacebookMarketplaceSellerThreadLabel | None = None,
+        cursor: str | None = None,
     ):
         return self._graphql_query(
-            26018704387747906,
+            25940357548956156,
             {
+                "count": 12,
+                "cursor": cursor,
                 "filterLabels": [
                     {
                         "label_category": "THREAD_LABEL",
@@ -261,6 +264,52 @@ class FacebookClient:
                 if filter_label
                 else {},
                 "lookBackInDays": 60 if filter_label else None,
+            },
+        )
+
+    def CometMarketplaceYouSellingFastContentContainerQuery(
+        self,
+    ):
+        return self._graphql_query(
+            26599015196447910,
+            {
+                "count": 5,
+                "order": "CREATION_TIMESTAMP_DESC",
+                "shouldDeferInfoSection": False,
+                "state": None,
+                "title_search": None,
+            },
+        )
+
+    def CometMarketplaceYouSellingFastActiveSectionPaginationQuery(
+        self,
+    ):
+        return self._graphql_query(
+            35565035023140261,
+            {
+                "count": 5,
+                "cursor": None,
+                "order": "CREATION_TIMESTAMP_DESC",
+                "state": None,
+                "status": None,
+                "title_search": None,
+                "__relay_internal__pv__ShouldUpdateMarketplaceBoostListingBoostedStatusrelayprovider": False,
+            },
+        )
+
+    def CometMarketplaceYouSellingFastInactiveSectionPaginationQuery(
+        self,
+    ):
+        return self._graphql_query(
+            27069247962711508,
+            {
+                "count": 5,
+                "cursor": None,
+                "order": "CREATION_TIMESTAMP_DESC",
+                "state": None,
+                "status": None,
+                "title_search": None,
+                "__relay_internal__pv__ShouldUpdateMarketplaceBoostListingBoostedStatusrelayprovider": False,
             },
         )
 
