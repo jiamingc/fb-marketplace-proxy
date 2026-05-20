@@ -2,6 +2,16 @@
 {% set active_nav_entry = "inbox" %}
 {% block title %}Inbox{% endblock %}
 {% block content %}
+	<nav>
+		<ul>
+			<li{% if tab == "buyer" %} class="active"{% endif %}>
+				<a href="{{ url_for("inbox", tab="buyer") }}">Buyer</a>
+			</li>
+			<li{% if tab == "seller" %} class="active"{% endif %}>
+				<a href="{{ url_for("inbox", tab="seller") }}">Seller</a>
+			</li>
+		</ul>
+	</nav>
 	<ul>
 	{% for thread in threads %}
 		<li style="display: flex;">
@@ -25,7 +35,7 @@
 				{% else %}
 					<div>Deleted Listing</div>
 				{% endif %}
-				<div style="font-style: italic;" />
+				<div style="font-style: italic;{% if thread.unread_count > 0 %} font-weight: bold;{% endif %}" />
 				{{ thread.snippet }}
 				</div>
 			</div>
@@ -33,6 +43,6 @@
 	{% endfor %}
 	</ul>
 	{% if end_cursor is not none %}
-		<a href="{{ url_for("saved", cursor=end_cursor) }}">Next Page</a>
+		<a href="{{ url_for("saved", tab=tab, cursor=end_cursor) }}">Next Page</a>
 	{% endif %}
 {% endblock %}

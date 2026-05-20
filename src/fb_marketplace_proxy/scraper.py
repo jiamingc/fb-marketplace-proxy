@@ -5,6 +5,7 @@ from .facebook import (
     FacebookApiError,
     FacebookMarketplaceCondition,
     FacebookMarketplaceDeliveryType,
+    FacebookMarketplaceSellerThreadLabel,
 )
 from typing import NamedTuple, TypedDict, IO
 
@@ -282,6 +283,22 @@ class Scraper:
         )
         threads, end_cursor = parse_paginated_connection(
             data["viewer"]["marketplaceInboxBuyerMessageThreads"]
+        )
+
+        parsed_threads = [self._extract_thread_info(thread) for thread in threads]
+
+        return PaginatedList(parsed_threads, end_cursor)
+
+    def fetch_seller_chat_threads(
+        self,
+        filter_label: FacebookMarketplaceSellerThreadLabel | None = None,
+        cursor: str | None = None,
+    ) -> PaginatedList[MessageThread]:
+        data = self.facebook_client.CometMarketplaceInboxSellerTabThreadViewPaginationQuery(
+            filter_label, cursor
+        )
+        threads, end_cursor = parse_paginated_connection(
+            data["viewer"]["marketplaceInboxSellerMessageThreads"]
         )
 
         parsed_threads = [self._extract_thread_info(thread) for thread in threads]
