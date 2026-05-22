@@ -108,30 +108,32 @@ class FacebookClient:
             else None,
         )
 
-        try:
-            response_json = response.json()
-        except JSONDecodeError:
+        if response.text.startswith(JSON_HIJACKING_PREFIX):
             # Attempt to parse structured error message
-            if response.text.startswith(JSON_HIJACKING_PREFIX):
-                try:
-                    error = json.loads(
-                        response.text.removeprefix(JSON_HIJACKING_PREFIX)
+            try:
+                error = json.loads(response.text.removeprefix(JSON_HIJACKING_PREFIX))
+                raise FacebookApiError(
+                    "\n".join(
+                        [
+                            error["errorSummary"],
+                            error["errorDescription"],
+                            error["redirectTo"],
+                        ]
                     )
-                    raise FacebookApiError(
-                        "\n".join(
-                            [
-                                error["errorSummary"],
-                                error["errorDescription"],
-                                error["redirectTo"],
-                            ]
-                        )
-                    )
-                except JSONDecodeError:
-                    pass
+                )
+            except JSONDecodeError:
+                raise FacebookApiError(f"Unexpected GraphQL response {response.text}")
 
+        payloads = response.text.split("\n")
+
+        try:
+            response_json = json.loads(payloads[0])
+        except JSONDecodeError:
             raise FacebookApiError(f"Unexpected GraphQL response {response.text}")
 
-        if "data" not in response_json:
+        try:
+            data = response_json["data"]
+        except KeyError:
             if "errors" in response_json:
                 raise FacebookApiError(
                     ", ".join(
@@ -141,7 +143,17 @@ class FacebookClient:
             else:
                 raise FacebookApiError("No data in GraphQL response")
 
-        return response_json["data"]
+        # Merge deferred payloads
+        for payload in payloads[1:]:
+            payload_json = json.loads(payload)
+
+            node = data
+            for key in payload_json["path"]:
+                node = node.setdefault(key, {})
+
+            node.update(payload_json["data"])
+
+        return data
 
     def CometMarketplaceSearchContentContainerQuery(
         self,
