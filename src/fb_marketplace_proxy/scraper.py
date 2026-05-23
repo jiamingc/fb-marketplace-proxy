@@ -1,3 +1,4 @@
+from enum import StrEnum
 from datetime import datetime
 from typing import Any
 from .facebook import (
@@ -46,6 +47,24 @@ class MessageThreadListingInfo(TypedDict):
     id: int
     title: str
     image: str
+
+
+class YourListingDetails(TypedDict):
+    id: int
+    title: str
+    image: str
+    integrity_status: ListingIntegrityStatus
+    # status field to capture is_live, is_pending, is_sold, is_draft?
+
+
+class ListingIntegrityStatus(TypedDict):
+    content: str
+    style: ListingIntegrityStatusStyle
+
+
+class ListingIntegrityStatusStyle(StrEnum):
+    ERROR = "ERROR"
+    INFO = "INFO"
 
 
 def parse_paginated_connection(connection: dict) -> tuple[list, str | None]:
@@ -247,6 +266,48 @@ class Scraper:
         )
 
         return int(data["marketplace_listing_create"]["listing"]["id"])
+
+    def _extract_your_listing_info(self, listing: dict[str, Any]) -> YourListingDetails:
+        return YourListingDetails(
+            id=listing["id"],
+            title=listing["marketplace_listing_title"],
+            image=listing["primary_listing_photo"]["image"]["uri"],
+            integrity_status=(integrity_status := listing["integrity_status_indicator"])
+            and ListingIntegrityStatus(
+                content=integrity_status["content"],
+                style=ListingIntegrityStatusStyle(integrity_status["style"]),
+            ),
+        )
+
+    def fetch_your_active_listings(
+        self, cursor: str | None = None
+    ) -> PaginatedList[YourListingDetails]:
+        data = self.facebook_client.CometMarketplaceYouSellingFastActiveSectionPaginationQuery(
+            cursor
+        )
+        listing_sets, end_cursor = parse_paginated_connection(
+            data["viewer"]["marketplace_listing_sets"]
+        )
+        listings = [
+            self._extract_your_listing_info(listing_set["first_listing"])
+            for listing_set in listing_sets
+        ]
+        return PaginatedList(listings, end_cursor)
+
+    def fetch_your_inactive_listings(
+        self, cursor: str | None = None
+    ) -> PaginatedList[YourListingDetails]:
+        data = self.facebook_client.CometMarketplaceYouSellingFastInactiveSectionPaginationQuery(
+            cursor
+        )
+        listing_sets, end_cursor = parse_paginated_connection(
+            data["viewer"]["inactive_listing_sets"]
+        )
+        listings = [
+            self._extract_your_listing_info(listing_set["first_listing"])
+            for listing_set in listing_sets
+        ]
+        return PaginatedList(listings, end_cursor)
 
     def save_listing(self, story_id: str):
         data = self.facebook_client.useCometMarketplaceSaveAsStoryMutation(story_id)

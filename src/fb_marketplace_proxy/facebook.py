@@ -295,12 +295,13 @@ class FacebookClient:
 
     def CometMarketplaceYouSellingFastActiveSectionPaginationQuery(
         self,
+        cursor: str | None = None,
     ):
         return self._graphql_query(
             35565035023140261,
             {
                 "count": 5,
-                "cursor": None,
+                "cursor": cursor,
                 "order": "CREATION_TIMESTAMP_DESC",
                 "state": None,
                 "status": None,
@@ -311,12 +312,13 @@ class FacebookClient:
 
     def CometMarketplaceYouSellingFastInactiveSectionPaginationQuery(
         self,
+        cursor: str | None = None,
     ):
         return self._graphql_query(
             27069247962711508,
             {
                 "count": 5,
-                "cursor": None,
+                "cursor": cursor,
                 "order": "CREATION_TIMESTAMP_DESC",
                 "state": None,
                 "status": None,
