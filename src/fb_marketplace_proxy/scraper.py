@@ -7,6 +7,7 @@ from .facebook import (
     FacebookMarketplaceCondition,
     FacebookMarketplaceDeliveryType,
     FacebookMarketplaceSellerThreadLabel,
+    FacebookMarketplaceAvailability,
 )
 from typing import NamedTuple, TypedDict, IO
 
@@ -24,10 +25,20 @@ class SearchResult(TypedDict):
 
 
 class ListingDetails(TypedDict):
+    id: int
     title: str
     description: str
+    status: ListingStatus
     images: list[str]
     story: StoryDetails | None
+    is_yours: bool
+
+
+class ListingStatus(StrEnum):
+    AVAILABLE = "AVAILABLE"
+    PENDING = "PENDING"
+    SOLD = "SOLD"
+    IN_STOCK = "IN_STOCK"
 
 
 class StoryDetails(TypedDict):
@@ -53,17 +64,17 @@ class YourListingDetails(TypedDict):
     id: int
     title: str
     image: str
-    integrity_status: ListingIntegrityStatus
+    status_indicator: ListingStatusIndicator
     # status field to capture is_live, is_pending, is_sold, is_draft?
 
 
-class ListingIntegrityStatus(TypedDict):
+class ListingStatusIndicator(TypedDict):
     content: str
-    style: ListingIntegrityStatusStyle
+    style: ListingStatusIndicatorStyle
 
 
-class ListingIntegrityStatusStyle(StrEnum):
-    ERROR = "ERROR"
+class ListingStatusIndicatorStyle(StrEnum):
+    WARNING = "WARNING"
     INFO = "INFO"
 
 
@@ -174,15 +185,7 @@ class Scraper:
 
         item = data["viewer"]["marketplace_product_details_page"]["target"]
 
-        status = (
-            "Sold"
-            if item["is_sold"]
-            else "Pending"
-            if item["is_pending"]
-            else "Live"
-            if item["is_live"]
-            else "?"
-        )
+        status = ListingStatus(item["renderable_listing_status"])
 
         title = item["marketplace_listing_title"]
         attributes = {
@@ -217,10 +220,13 @@ class Scraper:
         )
 
         return ListingDetails(
+            id=int(item["id"]),
             title=title,
             description=description,
+            status=status,
             images=self.fetch_images(listing_id),
             story=story_details,
+            is_yours=item["is_viewer_seller"],
         )
 
     def get_user_name(self) -> str | None:
@@ -267,15 +273,25 @@ class Scraper:
 
         return int(data["marketplace_listing_create"]["listing"]["id"])
 
+    def set_listing_availability(
+        self, story_id: str, availability: FacebookMarketplaceAvailability
+    ) -> None:
+        self.facebook_client.CometProductItemChangeAvailabilityMutation(
+            story_id, availability
+        )
+
+    def delete_listing(self, listing_id: int) -> None:
+        self.facebook_client.useCometMarketplaceForSaleItemDeleteMutation(listing_id)
+
     def _extract_your_listing_info(self, listing: dict[str, Any]) -> YourListingDetails:
         return YourListingDetails(
             id=listing["id"],
             title=listing["marketplace_listing_title"],
             image=listing["primary_listing_photo"]["image"]["uri"],
-            integrity_status=(integrity_status := listing["integrity_status_indicator"])
-            and ListingIntegrityStatus(
-                content=integrity_status["content"],
-                style=ListingIntegrityStatusStyle(integrity_status["style"]),
+            status_indicator=(status_indicator := listing["listing_status_indicator"])
+            and ListingStatusIndicator(
+                content=status_indicator["content"],
+                style=ListingStatusIndicatorStyle(status_indicator["style"]),
             ),
         )
 

@@ -10,6 +10,7 @@ from .facebook import (
     FacebookAuthCookies,
     FacebookMarketplaceCondition,
     FacebookMarketplaceDeliveryType,
+    FacebookMarketplaceAvailability,
 )
 
 
@@ -151,16 +152,14 @@ def search():
 def listing_details(listing_id: int):
     scraper = get_scraper()
     details = scraper.fetch_listing_details(listing_id)
-    return render_template(
-        "listing_details.html.jinja", listing_id=listing_id, details=details
-    )
+    return render_template("listing_details.html.jinja", details=details)
 
 
 @app.post("/listing/save")
 def save_listing():
     scraper = get_scraper()
 
-    listing_id = request.form["listing_id"]
+    listing_id = int(request.form["listing_id"])
     story_id = request.form["story_id"]
 
     scraper.save_listing(story_id)
@@ -172,7 +171,7 @@ def save_listing():
 def unsave_listing():
     scraper = get_scraper()
 
-    listing_id = request.form["listing_id"]
+    listing_id = int(request.form["listing_id"])
     story_id = request.form["story_id"]
 
     scraper.unsave_listing(story_id)
@@ -247,3 +246,21 @@ def your_listings():
         listings=listings,
         end_cursor=end_cursor,
     )
+
+
+@app.post("/listing/set_availability")
+def set_listing_availability():
+    scraper = get_scraper()
+    listing_id = int(request.form["listing_id"])
+    story_id = request.form["story_id"]
+    availability = FacebookMarketplaceAvailability(request.form["availability"])
+    scraper.set_listing_availability(story_id, availability)
+    return redirect(url_for("listing_details", listing_id=listing_id))
+
+
+@app.post("/listing/delete")
+def delete_listing():
+    scraper = get_scraper()
+    listing_id = int(request.form["listing_id"])
+    scraper.delete_listing(listing_id)
+    return redirect(url_for("index"))

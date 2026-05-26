@@ -1,32 +1,71 @@
 {% extends "layout.html.jinja" %}
 {% block title %}{{ details.title }}{% endblock %}
 {% block content %}
+	<div style="display: flex;">
+		{% if details.story and not details.is_yours %}
+			{% if details.story.saved %}
+				<form action="/listing/unsave" method="POST">
+					<input type="hidden" name="listing_id" value="{{ details.id }}" />
+					<input type="hidden" name="story_id" value="{{ details.story.id }}" />
+					<input type="submit" value="Unsave" />
+				</form>
+			{% else %}
+				<form action="/listing/save" method="POST">
+					<input type="hidden" name="listing_id" value="{{ details.id }}" />
+					<input type="hidden" name="story_id" value="{{ details.story.id }}" />
+					<input type="submit" value="Save" />
+				</form>
+			{% endif %}
+		{% endif %}
+		{% if details.is_yours %}
+			{% if details.status != "AVAILABLE" %}
+				<form action="/listing/set_availability" method="POST">
+					<input type="hidden" name="listing_id" value="{{ details.id }}" />
+					<input type="hidden" name="story_id" value="{{ details.story.id }}" />
+					<input type="hidden" name="availability" value="IN_STOCK" />
+					<input type="submit" value="Mark as Available" />
+				</form>
+			{% endif %}
+			{% if details.status != "PENDING" %}
+				<form action="/listing/set_availability" method="POST">
+					<input type="hidden" name="listing_id" value="{{ details.id }}" />
+					<input type="hidden" name="story_id" value="{{ details.story.id }}" />
+					<input type="hidden" name="availability" value="PENDING" />
+					<input type="submit" value="Mark as Pending" />
+				</form>
+			{% endif %}
+			{% if details.status != "SOLD" %}
+				<form action="/listing/set_availability" method="POST">
+					<input type="hidden" name="listing_id" value="{{ details.id }}" />
+					<input type="hidden" name="story_id" value="{{ details.story.id }}" />
+					<input type="hidden" name="availability" value="OUT_OF_STOCK" />
+					<input type="submit" value="Mark as Sold" />
+				</form>
+			{% endif %}
+			{% if details.status != "SOLD" %}
+				<form action="/listing/delete" method="POST">
+					<input type="hidden" name="listing_id" value="{{ details.id }}" />
+					<input type="submit" value="Delete" />
+				</form>
+			{% endif %}
+		{% else %}
+		{% endif %}
+		<a href="https://www.facebook.com/marketplace/item/{{ details.id }}">
+			<button>View on Marketplace</button>
+		</a>
+	</div>
 	{% for url in details.images %}
 		<img src="{{ url }}" height="200" />
 	{% endfor %}
 	<pre>{{ details.description }}</pre>
 
-	{% if details.story %}
-		{% if details.story.saved %}
-			<form action="/listing/unsave" method="POST">
-				<input type="hidden" name="listing_id" value="{{ listing_id }}" />
-				<input type="hidden" name="story_id" value="{{ details.story.id }}" />
-				<input type="submit" value="Unsave" />
-			</form>
-		{% else %}
-			<form action="/listing/save" method="POST">
-				<input type="hidden" name="listing_id" value="{{ listing_id }}" />
-				<input type="hidden" name="story_id" value="{{ details.story.id }}" />
-				<input type="submit" value="Save" />
-			</form>
-		{% endif %}
+	{% if not details.is_yours %}
+		<h3>Message Seller</h3>
+		<form action="/message_seller" method="POST">
+			<input type="hidden" name="listing_id" value="{{ details.id }}"/>
+			<textarea name="message" rows="5" cols="50"></textarea>
+			<br />
+			<input type="submit" value="Send"/>
+		</form>
 	{% endif %}
-
-	<h3>Message Seller</h3>
-	<form action="/message_seller" method="POST">
-		<input type="hidden" name="listing_id" value="{{ listing_id }}"/>
-		<textarea name="message" rows="5" cols="50"></textarea>
-		<br />
-		<input type="submit" value="Send"/>
-	</form>
 {% endblock %}

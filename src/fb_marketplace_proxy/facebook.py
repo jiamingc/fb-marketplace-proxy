@@ -45,6 +45,12 @@ class FacebookMarketplaceCategory(IntEnum):
     BOOKS = 819915902202289
 
 
+class FacebookMarketplaceAvailability(StrEnum):
+    IN_STOCK = "IN_STOCK"
+    PENDING = "PENDING"
+    OUT_OF_STOCK = "OUT_OF_STOCK"
+
+
 class FacebookApiError(Exception):
     pass
 
@@ -215,7 +221,7 @@ class FacebookClient:
 
     def MarketplacePDPContainerQuery(self, listing_id: int):
         return self._graphql_query(
-            26002077532790480,
+            26864403643222653,
             {
                 "targetId": listing_id,
             },
@@ -390,6 +396,32 @@ class FacebookClient:
                     "save_mechanism": "SAVED_ADD",
                     "save_surface": "MARKETPLACE_PRODUCT_DETAILS",
                     "story_id": story_id,
+                }
+            },
+        )
+
+    def CometProductItemChangeAvailabilityMutation(
+        self, story_id: str, availability: FacebookMarketplaceAvailability
+    ):
+        return self._graphql_query(
+            25224612400502051,
+            {
+                "input": {
+                    "product_availability": availability,
+                    "story_id": story_id,
+                    "actor_id": self.auth_cookies and self.auth_cookies.c_user,
+                }
+            },
+        )
+
+    def useCometMarketplaceForSaleItemDeleteMutation(self, listing_id: int):
+        return self._graphql_query(
+            30073389588942699,
+            {
+                "input": {
+                    "actor_id": self.auth_cookies and self.auth_cookies.c_user,
+                    "batch_delete_variants": True,
+                    "for_sale_item_id": listing_id,
                 }
             },
         )
