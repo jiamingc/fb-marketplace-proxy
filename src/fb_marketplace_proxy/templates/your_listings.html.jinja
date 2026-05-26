@@ -1,0 +1,35 @@
+{% extends "layout.html.jinja" %}
+{% set active_nav_entry = "your_listings" %}
+{% block title %}Your Listings{% endblock %}
+{% block content %}
+	<nav>
+		<ul>
+			<li{% if tab == "active" %} class="active"{% endif %}>
+				<a href="{{ url_for("your_listings", tab="active") }}">Active</a>
+			</li>
+			<li{% if tab == "inactive" %} class="active"{% endif %}>
+				<a href="{{ url_for("your_listings", tab="inactive") }}">Inactive</a>
+			</li>
+		</ul>
+	</nav>
+	<ul>
+	{% for listing in listings %}
+		<li style="display: flex;">
+			<img src="{{ listing.image }}" height="100" />
+			<div style="display: flex; flex-direction: column;">
+				<a href="{{ url_for("listing_details", listing_id=listing.id) }}">
+					<h2 style="margin: 0;">
+						{{ listing.title }}
+					</h2>
+				</a>
+				{% if listing.integrity_status %}
+					<div>{{ listing.integrity_status.content }}</div>
+				{% endif %}
+			</div>
+		</li>
+	{% endfor %}
+	</ul>
+	{% if end_cursor is not none %}
+		<a href="{{ url_for("your_listings", tab=tab, cursor=end_cursor) }}">Next Page</a>
+	{% endif %}
+{% endblock %}

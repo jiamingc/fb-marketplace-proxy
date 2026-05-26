@@ -11,7 +11,7 @@
 			<li style="display: flex;">
 				<img src="{{ result.image }}" height="200" />
 				<div>
-					<a href="/listing/{{ result.id }}">
+					<a href="{{ url_for("listing_details", listing_id=result.id) }}">
 						<h2>{{ result.title }}</h2>
 					</a>
 					<pre>{{ result.description }}</pre>

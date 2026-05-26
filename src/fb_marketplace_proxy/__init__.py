@@ -192,12 +192,12 @@ def message_seller():
     return redirect(f"https://www.facebook.com/messages/t/{thread_id}/")
 
 
-@app.get("/listing/create")
+@app.get("/create_listing")
 def create_listing_form():
-    return render_template("listing_create.html.jinja")
+    return render_template("create_listing.html.jinja")
 
 
-@app.post("/listing/create")
+@app.post("/create_listing")
 def create_listing():
     scraper = get_scraper()
 
@@ -225,3 +225,25 @@ def create_listing():
     )
 
     return redirect(url_for("listing_details", listing_id=listing_id))
+
+
+@app.get("/your_listings")
+def your_listings():
+    scraper = get_scraper()
+    tab = request.args.get("tab", "active")
+    cursor = request.args.get("cursor")
+    match tab:
+        case "active":
+            listings, end_cursor = scraper.fetch_your_active_listings(cursor)
+            pass
+        case "inactive":
+            listings, end_cursor = scraper.fetch_your_inactive_listings(cursor)
+            pass
+        case _:
+            raise Exception(f"Unrecognized your listings tab: {tab}")
+    return render_template(
+        "your_listings.html.jinja",
+        tab=tab,
+        listings=listings,
+        end_cursor=end_cursor,
+    )
