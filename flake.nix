@@ -81,6 +81,7 @@
             packages.default = pythonSet.mkVirtualEnv "venv" workspace.deps.default;
             packages.dockerImage = pkgs.dockerTools.buildImage {
               name = "fb-marketplace-proxy";
+              tag = "latest";
               config = {
                 Cmd = [
                   "${self'.packages.default}/bin/gunicorn"
