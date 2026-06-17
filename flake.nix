@@ -87,6 +87,9 @@
                   "fb_marketplace_proxy"
                   "--bind=0.0.0.0:8000"
                 ];
+                ExposedPorts = {
+                  "8000/tcp" = { };
+                };
               };
             };
             devShells.default =
