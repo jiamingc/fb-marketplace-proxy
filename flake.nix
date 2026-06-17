@@ -63,7 +63,7 @@
         ];
 
         perSystem =
-          { pkgs, ... }:
+          { pkgs, self', ... }:
           let
             workspace = inputs.uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
             pythonSet =
@@ -79,6 +79,16 @@
           in
           {
             packages.default = pythonSet.mkVirtualEnv "venv" workspace.deps.default;
+            packages.dockerImage = pkgs.dockerTools.buildImage {
+              name = "fb-marketplace-proxy";
+              config = {
+                Cmd = [
+                  "${self'.packages.default}/bin/gunicorn"
+                  "fb_marketplace_proxy"
+                  "--bind=0.0.0.0:8000"
+                ];
+              };
+            };
             devShells.default =
               let
                 pythonSetEditable = pythonSet.overrideScope (
