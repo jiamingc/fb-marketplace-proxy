@@ -1,0 +1,25 @@
+name: Push Docker Image
+on:
+  push:
+    branches:
+      - main
+jobs:
+  push-docker-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          imagePath=$(nix build .#dockerImage --print-out-paths --no-link)
+          docker load --input "$imagePath"
+          docker push ghcr.io/jiamingc/fb-marketplace-proxy:latest
