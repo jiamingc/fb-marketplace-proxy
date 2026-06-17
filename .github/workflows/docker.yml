@@ -22,4 +22,5 @@ jobs:
       - run: |
           imagePath=$(nix build .#dockerImage --print-out-paths --no-link)
           docker load --input "$imagePath"
+          docker tag fb-marketplace-proxy ghcr.io/jiamingc/fb-marketplace-proxy:latest
           docker push ghcr.io/jiamingc/fb-marketplace-proxy:latest
