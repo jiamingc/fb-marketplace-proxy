@@ -123,7 +123,7 @@ class FacebookClient:
                         [
                             error["errorSummary"],
                             error["errorDescription"],
-                            error["redirectTo"],
+                            error.get("redirectTo", ""),
                         ]
                     )
                 )
