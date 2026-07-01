@@ -39,6 +39,12 @@ def handle_exception(e: FacebookApiError):
     return render_template("error.html.jinja", message=str(e)), 500
 
 
+@app.after_request
+def after_request(response):
+    response.headers["Referer-Policy"] = "same-origin"
+    return response
+
+
 @app.get("/")
 def index():
     return render_template("search_form.html.jinja")
