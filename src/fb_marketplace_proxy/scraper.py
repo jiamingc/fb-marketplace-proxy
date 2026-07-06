@@ -78,6 +78,7 @@ class ListingStatusIndicator(TypedDict):
 class ListingStatusIndicatorStyle(StrEnum):
     WARNING = "WARNING"
     INFO = "INFO"
+    CHECKMARK = "CHECKMARK"
 
 
 def parse_paginated_connection(connection: dict) -> tuple[list, str | None]:
