@@ -11,6 +11,7 @@ from .facebook import (
     FacebookMarketplaceCondition,
     FacebookMarketplaceDeliveryType,
     FacebookMarketplaceAvailability,
+    FacebookMarketplaceCategory,
 )
 
 
@@ -199,7 +200,9 @@ def message_seller():
 
 @app.get("/create_listing")
 def create_listing_form():
-    return render_template("create_listing.html.jinja")
+    return render_template(
+        "create_listing.html.jinja", categories=FacebookMarketplaceCategory
+    )
 
 
 @app.post("/create_listing")
@@ -210,6 +213,7 @@ def create_listing():
     description = request.form["description"]
     photos = [file.stream for file in request.files.getlist("photos")]
     price = int(request.form["price"])
+    category = FacebookMarketplaceCategory(request.form["category"])
     condition = FacebookMarketplaceCondition(request.form["condition"])
     delivery_types = [
         FacebookMarketplaceDeliveryType.IN_PERSON,
@@ -223,6 +227,7 @@ def create_listing():
         description,
         photos,
         price,
+        category,
         condition,
         delivery_types,
         latitude,

@@ -40,7 +40,6 @@ class FacebookMarketplaceCondition(StrEnum):
 
 
 class FacebookMarketplaceCategory(IntEnum):
-    NONE = 0
     # Home & Garden
     TOOLS = 1670493229902393
     FURNITURE = 1583634935226685
@@ -374,6 +373,7 @@ class FacebookClient:
         description: str,
         photo_ids: list[int],
         price: int,
+        category: FacebookMarketplaceCategory,
         condition: FacebookMarketplaceCondition,
         delivery_types: list[FacebookMarketplaceDeliveryType],
         latitude: float,
@@ -389,7 +389,7 @@ class FacebookClient:
                     "data": {
                         "common": {
                             "attribute_data_json": json.dumps({"condition": condition}),
-                            "category_id": FacebookMarketplaceCategory.NONE,
+                            "category_id": category,
                             "delivery_types": delivery_types,
                             "description": {
                                 "text": description,

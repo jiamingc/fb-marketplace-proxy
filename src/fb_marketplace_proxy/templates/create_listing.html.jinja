@@ -12,6 +12,14 @@
 		<label for="price">Price</label>
 		<input type="number" name="price" id="price" min="0" required />
 
+		<label for="category">Category</label>
+		<select name="category" id="condition" required>
+			<option value=""></option>
+			{% for category in categories %}
+				<option value="{{ category.value }}">{{ category.name }}</option>
+			{% endfor %}
+		</select>
+
 		<label for="condition">Condition</label>
 		<select name="condition" id="condition" required>
 			<option value=""></option>

@@ -8,6 +8,7 @@ from .facebook import (
     FacebookMarketplaceDeliveryType,
     FacebookMarketplaceSellerThreadLabel,
     FacebookMarketplaceAvailability,
+    FacebookMarketplaceCategory,
 )
 from typing import NamedTuple, TypedDict, IO
 
@@ -254,6 +255,7 @@ class Scraper:
         description: str,
         photos: list[IO[bytes]],
         price: int,
+        category: FacebookMarketplaceCategory,
         condition: FacebookMarketplaceCondition,
         delivery_types: list[FacebookMarketplaceDeliveryType],
         latitude: float,
@@ -265,6 +267,7 @@ class Scraper:
             description,
             photo_ids,
             price,
+            category,
             condition,
             delivery_types,
             latitude,
