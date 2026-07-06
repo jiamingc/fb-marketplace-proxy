@@ -213,7 +213,7 @@ def create_listing():
     description = request.form["description"]
     photos = [file.stream for file in request.files.getlist("photos")]
     price = int(request.form["price"])
-    category = FacebookMarketplaceCategory(request.form["category"])
+    category = FacebookMarketplaceCategory(int(request.form["category"]))
     condition = FacebookMarketplaceCondition(request.form["condition"])
     delivery_types = [
         FacebookMarketplaceDeliveryType.IN_PERSON,

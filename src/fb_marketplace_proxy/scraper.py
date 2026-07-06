@@ -40,6 +40,7 @@ class ListingStatus(StrEnum):
     PENDING = "PENDING"
     SOLD = "SOLD"
     IN_STOCK = "IN_STOCK"
+    IN_REVIEW = "IN_REVIEW"
 
 
 class StoryDetails(TypedDict):
