@@ -109,7 +109,10 @@ class Scraper:
         )
         for idx, feed_unit in enumerate(feed_units):
             unit_type = feed_unit["__typename"]
-            if unit_type == "MarketplaceFeedListingStoryObject":
+            if unit_type in [
+                "MarketplaceFeedListingStoryObject",
+                "MarketplaceFeedAdStory",
+            ]:
                 continue
 
             assert unit_type in [
@@ -126,7 +129,11 @@ class Scraper:
                 # Sometimes a cursor for irrelevant results is given after the end of relevant results
                 end_cursor = None
 
-        listings = [feed_unit["listing"] for feed_unit in feed_units]
+        listings = [
+            feed_unit["listing"]
+            for feed_unit in feed_units
+            if feed_unit["__typename"] != "MarketplaceFeedAdStory"
+        ]
         parsed_listings = [self._extract_search_result(listing) for listing in listings]
 
         return PaginatedList(parsed_listings, end_cursor)
